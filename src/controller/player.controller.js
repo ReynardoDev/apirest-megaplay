@@ -1,6 +1,6 @@
 import { pool } from "../db.js";
-
-
+import validator from 'validator';
+import bcrypt from 'bcryptjs';
 
 export const getPlayers = async (req, res) => {
   try {
@@ -73,7 +73,7 @@ export const changeActivePlayer = async (req, res) => {
   }
 };
 
-
+/*
 export const getWalletById = async (req, res) => {
   const { id } = req.params;
   try {  
@@ -91,7 +91,7 @@ export const getWalletById = async (req, res) => {
     });
   }
 };
-
+*/
 
 //Update 
 export const updatePlayer = async (req, res) => {
@@ -114,51 +114,3 @@ export const updatePlayer = async (req, res) => {
     });
   }
 };
-
-
-
-// Login
-export const getPlayerLogin = async (req, res) => {
-  const {email, password} = req.params;
-  try {
-    const [rows] = await pool.query("SELECT id_player, user, email FROM players WHERE email = ? AND password = ? AND active = 1", [email, password]);
-    if (rows.length <= 0) {
-      return res.status(404).json({ 
-        message: "Player not found"
-      });
-    }
-    res.json({
-      message: "Player found",
-      player: rows[0]
-    });
-  } catch (error) {
-    console.log(error);
-    res.status(500).json({
-      message: "Player not found - db error"
-    });
-  }
-}
-
-
-//Register
-export const createPlayer = async (req, res) => {
-  const {user, password, email, active} =  req.body;  
-  //aquí podemos validar los datos
-  try {       
-    const [result] = await pool.query("INSERT INTO players (user, password, email, active) VALUES (?, ?, ?, ?)", [user, password, email, active]);    
-    res.send(
-        {
-            "id": result.insertId,
-            "user": user,
-            "password": password,
-            "email": email,
-            "active": active
-        }
-    );
-  } catch (error) {
-    console.log(error);
-    res.status(500).json({
-      message: "Player not found - db error"
-    });
-  }
-}
