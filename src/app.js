@@ -5,13 +5,17 @@ import playerRoutes from "./routes/player.routes.js";
 import walletRoutes from "./routes/wallet.routes.js";
 import gameRoutes from "./routes/game.routes.js";
 import loginRoutes from "./routes/login.routes.js";
+import cookieParser from "cookie-parser";
+import { jsonSyntaxErrorHandler } from "./midllewares/errorHandler.js";
 
 const app = express();
 
 app.use(cors());
 app.use(express.json());
-
+app.use(cookieParser());
 app.use(indexRoutes);
+
+app.use(jsonSyntaxErrorHandler);
 
 app.use('/api',playerRoutes);
 app.use('/api',walletRoutes);
