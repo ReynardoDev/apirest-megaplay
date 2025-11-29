@@ -9,18 +9,22 @@ export const getPlayers = async (req, res) => {
   } catch (error) {
     console.log(error);
     res.status(500).json({
-      message: "Players not found - db error"
+      message: "Error: " + error + "Result: " + rows
     });
   }
 }
 
+export const listPlayers = async (req, res) => {
+  res.render('index', { var_title: 'CRUD Players' });
+}
 
-export const getPlayerById = async (req, res) => {  
+
+export const getPlayerById = async (req, res) => {
   const { id } = req.params;
-  try {  
+  try {
     const [rows] = await pool.query("SELECT id_player, user, email FROM players WHERE id_player = ? AND active = 1", [id]);
     if (rows.length <= 0) {
-      return res.status(404).json({ 
+      return res.status(404).json({
         message: "Player not found"
       });
     }
@@ -39,7 +43,7 @@ export const deletePlayerById = async (req, res) => {
   try {
     const [result] = await pool.query("DELETE FROM players WHERE id_player = ?", [id]);
     if (result.affectedRows <= 0) {
-      return res.status(404).json({ 
+      return res.status(404).json({
         message: "Player not found"
       });
     }
@@ -53,17 +57,17 @@ export const deletePlayerById = async (req, res) => {
 };
 
 export const changeActivePlayer = async (req, res) => {
-  const [id] = req.params.id;    
+  const [id] = req.params.id;
   const [active] = req.params.active;
-  try {  
+  try {
     const [result] = await pool.query("UPDATE players SET active = ? WHERE id_player = ?", [active, id]);
     if (result.affectedRows <= 0) {
-      return res.status(404).json({ 
-        message: "Player " + id + " not found"  
+      return res.status(404).json({
+        message: "Player " + id + " not found"
       });
     }
     res.json({
-         message: "Player: " + id + " active: " + active         
+      message: "Player: " + id + " active: " + active
     });
   } catch (error) {
     console.log(error);
@@ -73,39 +77,20 @@ export const changeActivePlayer = async (req, res) => {
   }
 };
 
-/*
-export const getWalletById = async (req, res) => {
-  const { id } = req.params;
-  try {  
-    const [rows] = await pool.query("SELECT chips FROM wallet WHERE id_player = ?", [id]);
-    if (rows.length <= 0) {
-      return res.status(404).json({ 
-        message: "Wallet not found"
-      });
-    }
-    res.json(rows[0]);
-  } catch (error) {
-    console.log(error);
-    res.status(500).json({
-      message: "Wallet not found - db error"
-    });
-  }
-};
-*/
 
 //Update 
 export const updatePlayer = async (req, res) => {
-  const {id} = req.params;
-  const {user, password, email, active} = req.body;
-  try {    
+  const { id } = req.params;
+  const { user, password, email, active } = req.body;
+  try {
     const [result] = await pool.query("UPDATE players SET user = IFNULL(?, user), password = IFNULL(?, password), email = IFNULL(?, email), active = IFNULL(?, active) WHERE id_player = ?", [user, password, email, active, id]);
     if (result.affectedRows <= 0) {
-      return res.status(404).json({ 
-        message: "Player " + id + " not found"  
+      return res.status(404).json({
+        message: "Player " + id + " not found"
       });
     }
     res.json({
-         message: "Player: " + id + " updated"         
+      message: "Player: " + id + " updated"
     });
   } catch (error) {
     console.log(error);

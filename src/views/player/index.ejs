@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title> CRUD Players </title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+</head>
+
+<body>
+    <div class="bg-gray-900 min-h-screen">
+
+        <div class="container mx-auto px-4 py-8">
+            <div class="flex justify-between items-center mb-6">
+                <h1 class="text-3xl font-bold text-white tracking-tight">
+                    <%= var_title %>
+                </h1>
+                <a href="/crud/create"
+                    class="inline-flex items-center px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium rounded-md shadow-sm transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20"
+                        fill="currentColor">
+                        <path fill-rule="evenodd"
+                            d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z"
+                            clip-rule="evenodd" />
+                    </svg>
+                    Create Player
+                </a>
+            </div>
+
+            <div class="bg-gray-800 rounded-lg shadow-xl overflow-hidden border border-gray-700">
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-gray-700">
+                        <thead class="bg-gray-900/50">
+                            <tr>
+                                <th scope="col"
+                                    class="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
+                                    Id</th>
+                                <th scope="col"
+                                    class="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
+                                    Name</th>
+                                <th scope="col"
+                                    class="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
+                                    Mail</th>
+                                <th scope="col"
+                                    class="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
+                                    Active</th>
+                                <th scope="col"
+                                    class="px-6 py-3 text-right text-xs font-medium text-gray-400 uppercase tracking-wider">
+                                    Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-gray-700">
+                            <% items.forEach(item=> { %>
+                                <tr class="hover:bg-gray-700/50 transition-colors duration-150">
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
+                                        <%= item.id_player %>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-white">
+                                        <%= item.user %>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
+                                        <%= item.email %>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm">
+                                        <% if (item.active) { %>
+                                            <span
+                                                class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
+                                                Active
+                                            </span>
+                                            <% } else { %>
+                                                <span
+                                                    class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">
+                                                    Inactive
+                                                </span>
+                                                <% } %>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                        <a href="/crud/edit/<%= item.id_player %>"
+                                            class="text-indigo-400 hover:text-indigo-300 mr-4 transition-colors duration-200">Edit</a>
+                                        <a href="/crud/delete/<%= item.id_player %>"
+                                            class="text-red-400 hover:text-red-300 transition-colors duration-200">Delete</a>
+                                    </td>
+                                </tr>
+                                <% }) %>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+
+</html>

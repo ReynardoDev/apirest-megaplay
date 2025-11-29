@@ -4,8 +4,8 @@ import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 
 // Las variables JWT_SECRET y JWT_EXPIRES deben estar en tu archivo .env
-const JWT_SECRET = process.env.JWT_SECRET; 
-const JWT_EXPIRES = process.env.JWT_EXPIRES || '1h'; 
+const JWT_SECRET = process.env.JWT_SECRET;
+const JWT_EXPIRES = process.env.JWT_EXPIRES || '1h';
 
 
 /*
@@ -19,7 +19,7 @@ export const getPlayerLogin = async (req, res) => {
     try {
         // 1. Buscamos al usuario por email y que esté activo.
         const [rows] = await pool.query(
-            "SELECT id_player, user, email, password FROM players WHERE email = ? AND active = 1", 
+            "SELECT id_player, user, email, password FROM players WHERE email = ? AND active = 1",
             [email]
         );
 
@@ -35,9 +35,9 @@ export const getPlayerLogin = async (req, res) => {
         if (!esCorrecta) {
             return res.status(401).json({ message: "Credenciales inválidas" });
         }
-        
+
         // 🟢 CORRECCIÓN 2: Generar Token y Cookie SOLO después de verificar la contraseña
-        
+
         // 3. Generar el Token (Payload con ID)
         const token = jwt.sign({ id: player.id_player }, JWT_SECRET, { expiresIn: JWT_EXPIRES });
         const maxAgeMs = JWT_EXPIRES === '1h' ? 60 * 60 * 1000 : undefined; // Ajustar duración a milisegundos
@@ -48,14 +48,14 @@ export const getPlayerLogin = async (req, res) => {
             // 🛑 CRÍTICO: En localhost (que no usa HTTPS), secure DEBE ser false.
             // PERO, si usas 'sameSite: strict', a veces falla. Usamos 'lax'.
             // Usar 'process.env.NODE_ENV === "production"' para el valor real
-            secure: false, 
+            secure: false,
             sameSite: 'lax', // Mejor para desarrollo local.
             domain: 'localhost', // 💡 Explicamos al navegador dónde aplicar la cookie
-            maxAge: maxAgeMs 
+            maxAge: maxAgeMs
         });
-        
-        
-        
+
+
+
         // 5. Preparar la respuesta limpia
         const { password: _, ...playerWithoutPassword } = player;
 
@@ -73,7 +73,7 @@ export const getPlayerLogin = async (req, res) => {
 
 /*
  * =========================================================
- * Controlador de REGISTRO (Mantiene la estructura)
+ * Controlador de REGISTRO 
  * =========================================================
  */
 export const getPlayerRegister = async (req, res) => {
@@ -90,12 +90,12 @@ export const getPlayerRegister = async (req, res) => {
         const cleanEmail = email.trim();
         const isActive = active !== undefined ? active : 1;
         let chips_bono = 10;
-        
+
         // 🔴 CORRECCIÓN 3: Aquí falta la Transacción SQL
         // Usar pool.getConnection() para garantizar que las dos inserciones sean atómicas.
-        
+
         const [result] = await pool.query(
-            "INSERT INTO players (user, password, email, active) VALUES (?, ?, ?, ?)", 
+            "INSERT INTO players (user, password, email, active) VALUES (?, ?, ?, ?)",
             [cleanUser, hashedPassword, cleanEmail, isActive]
         );
 
@@ -126,17 +126,17 @@ export const getPlayerRegister = async (req, res) => {
 
 
 export const getProtected = async (req, res) => {
-  const token = req.cookies.access_token;
-  if (!token) {
-      return res.status(401).json({ message: "Acceso no autorizado" });
-  }  
-  try {    
-    const data = jwt.verify(token, JWT_SECRET);     
-    res.json({ message: "Acceso autorizado", data });    
-  } catch(error) {
-    console.error("Error en getProtecterd:", error);
-    res.status(401).json({ message: "Acceso no autorizado" });
-  }
+    const token = req.cookies.access_token;
+    if (!token) {
+        return res.status(401).json({ message: "Acceso no autorizado" });
+    }
+    try {
+        const data = jwt.verify(token, JWT_SECRET);
+        res.json({ message: "Acceso autorizado", data });
+    } catch (error) {
+        console.error("Error en getProtecterd:", error);
+        res.status(401).json({ message: "Acceso no autorizado" });
+    }
 }
 
 

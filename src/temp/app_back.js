@@ -1,0 +1,46 @@
+import express from "express";
+import cors from "cors";
+import indexRoutes from "./routes/index.routes.js";
+import playerRoutes from "./routes/player.routes.js";
+import walletRoutes from "./routes/wallet.routes.js";
+import gameRoutes from "./routes/game.routes.js";
+import loginRoutes from "./routes/login.routes.js";
+import playerCrudRoutes from "./routes/player.crud.routes.js";
+
+import ejs from "ejs";
+
+
+import cookieParser from "cookie-parser";
+import { jsonSyntaxErrorHandler } from "./middlewares/errorHandler.js";
+
+
+const app = express();
+
+app.use(cors());
+app.use(express.json());
+app.use(cookieParser());
+app.use(indexRoutes);
+
+app.use(jsonSyntaxErrorHandler);
+
+app.use('/api', playerRoutes);
+app.use('/api', walletRoutes);
+app.use('/api', gameRoutes);
+app.use('/api', loginRoutes);
+
+app.use('/crud', playerCrudRoutes);
+
+app.set('view engine', 'ejs');
+app.set('views', './views');
+
+
+
+
+//Si falla ruta
+app.use((req, res, next) => {
+    res.status(404).json({
+        message: "API not found"
+    });
+})
+
+export default app;

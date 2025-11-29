@@ -1,9 +1,6 @@
-import {config} from 'dotenv'
+import { config } from 'dotenv'
 
 config();
-
-
-
 
 export const DB_HOST = process.env.DB_HOST || 'localhost';
 export const DB_PASSWORD = process.env.DB_PASSWORD || '';
