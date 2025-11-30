@@ -7,17 +7,29 @@ import jwt from 'jsonwebtoken';
 const JWT_SECRET = process.env.JWT_SECRET;
 const JWT_EXPIRES = process.env.JWT_EXPIRES || '1h';
 
+/*
+ * =========================================================
+ * Controlador de VISTA LOGIN (GET)
+ * =========================================================
+ */
+export const login = (req, res) => {
+    // Solo renderizamos la vista. No leemos req.body aquí.
+    res.render("login/index", {
+        title: "Login",
+        message: null
+    });
+};
 
 /*
  * =========================================================
- * Controlador de LOGIN
+ * Controlador de PROCESO LOGIN (POST)
  * =========================================================
  */
 export const getPlayerLogin = async (req, res) => {
     const { email, password } = req.body;
 
     try {
-        // 1. Buscamos al usuario por email y que esté activo.
+        // 1. Buscamos al usuario
         const [rows] = await pool.query(
             "SELECT id_player, user, email, password FROM players WHERE email = ? AND active = 1",
             [email]
@@ -36,32 +48,26 @@ export const getPlayerLogin = async (req, res) => {
             return res.status(401).json({ message: "Credenciales inválidas" });
         }
 
-        // 🟢 CORRECCIÓN 2: Generar Token y Cookie SOLO después de verificar la contraseña
-
-        // 3. Generar el Token (Payload con ID)
+        // 3. Generar el Token
         const token = jwt.sign({ id: player.id_player }, JWT_SECRET, { expiresIn: JWT_EXPIRES });
-        const maxAgeMs = JWT_EXPIRES === '1h' ? 60 * 60 * 1000 : undefined; // Ajustar duración a milisegundos
+        const maxAgeMs = JWT_EXPIRES === '1h' ? 60 * 60 * 1000 : 3600000;
 
-        // 4. Setear Cookie Segura
+        // 4. Setear Cookie Segura (CORREGIDO)
         res.cookie("access_token", token, {
             httpOnly: true,
-            // 🛑 CRÍTICO: En localhost (que no usa HTTPS), secure DEBE ser false.
-            // PERO, si usas 'sameSite: strict', a veces falla. Usamos 'lax'.
-            // Usar 'process.env.NODE_ENV === "production"' para el valor real
-            secure: false,
-            sameSite: 'lax', // Mejor para desarrollo local.
-            domain: 'localhost', // 💡 Explicamos al navegador dónde aplicar la cookie
+            secure: false,   // false para localhost (http)
+            sameSite: 'lax', // lax para que funcione la navegación local
+            // ❌ ELIMINADA LA LÍNEA: domain: 'localhost' 
             maxAge: maxAgeMs
         });
 
-
-
-        // 5. Preparar la respuesta limpia
+        // 5. Respuesta
         const { password: _, ...playerWithoutPassword } = player;
 
         res.json({
             message: "Login exitoso",
-            player: playerWithoutPassword
+            player: playerWithoutPassword,
+            token: token // Enviamos también el token por si el frontend lo necesita manualmente
         });
 
     } catch (error) {
@@ -71,58 +77,6 @@ export const getPlayerLogin = async (req, res) => {
 }
 
 
-/*
- * =========================================================
- * Controlador de REGISTRO 
- * =========================================================
- */
-export const getPlayerRegister = async (req, res) => {
-    // ... (Tu código de validación de usuario/password/email) ...
-    // La estructura está correcta para validaciones y hashing.
-
-    try {
-        const { user, password, email, active } = req.body;
-        // ... (Tu código de validación y duplicados aquí) ...
-
-        const salt = await bcrypt.genSalt(10);
-        const hashedPassword = await bcrypt.hash(password, salt);
-        const cleanUser = user.trim();
-        const cleanEmail = email.trim();
-        const isActive = active !== undefined ? active : 1;
-        let chips_bono = 10;
-
-        // 🔴 CORRECCIÓN 3: Aquí falta la Transacción SQL
-        // Usar pool.getConnection() para garantizar que las dos inserciones sean atómicas.
-
-        const [result] = await pool.query(
-            "INSERT INTO players (user, password, email, active) VALUES (?, ?, ?, ?)",
-            [cleanUser, hashedPassword, cleanEmail, isActive]
-        );
-
-        const [result_wallet] = await pool.query(
-            "INSERT INTO wallet (id_player, chips) VALUES (?, ?)",
-            [result.insertId, chips_bono]
-        );
-        // Nota: Si usaras Transacciones, aquí pondrías connection.commit();
-
-        // --- 5. RESPUESTA EXITOSA ---
-        res.status(201).json({
-            message: "Jugador registrado exitosamente",
-            player: {
-                id: result.insertId,
-                user: cleanUser,
-                email: cleanEmail,
-                chips: chips_bono,
-                active: isActive
-            }
-        });
-
-    } catch (error) {
-        console.error("Error en createPlayer:", error);
-        // Nota: Si el error es un duplicado, debería ser 409, pero 500 para errores de DB es correcto.
-        res.status(500).json({ message: "Error interno del servidor" });
-    }
-}
 
 
 export const getProtected = async (req, res) => {
@@ -150,3 +104,4 @@ export const getPlayerLogout = async (req, res) => {
         res.status(500).json({ message: "Error interno del servidor" });
     }
 }
+

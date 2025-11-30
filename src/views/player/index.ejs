@@ -4,82 +4,182 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title> CRUD Players </title>
-    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <title>CRUD Players</title>
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- DataTables -->
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.4/css/jquery.dataTables.min.css">
+
+    <style>
+        /* Personalización profunda de DataTables para Tailwind Dark Mode */
+        .dataTables_wrapper .dataTables_length,
+        .dataTables_wrapper .dataTables_filter,
+        .dataTables_wrapper .dataTables_info,
+        .dataTables_wrapper .dataTables_processing,
+        .dataTables_wrapper .dataTables_paginate {
+            color: #9ca3af !important;
+            /* text-gray-400 */
+            margin-bottom: 1rem;
+            margin-top: 1rem;
+        }
+
+        .dataTables_wrapper .dataTables_filter input {
+            background-color: #374151;
+            /* bg-gray-700 */
+            border: 1px solid #4b5563;
+            /* border-gray-600 */
+            color: #fff;
+            border-radius: 0.375rem;
+            padding: 0.25rem 0.5rem;
+            outline: none;
+        }
+
+        .dataTables_wrapper .dataTables_length select {
+            background-color: #374151;
+            border: 1px solid #4b5563;
+            color: #fff;
+            border-radius: 0.375rem;
+            padding: 0.25rem 1.5rem 0.25rem 0.5rem;
+        }
+
+        table.dataTable tbody tr {
+            background-color: transparent !important;
+        }
+
+        table.dataTable tbody tr:hover {
+            background-color: rgba(55, 65, 81, 0.5) !important;
+            /* bg-gray-700 con opacidad */
+        }
+
+        /* Ocultar bordes feos de DataTables */
+        table.dataTable.no-footer {
+            border-bottom: 1px solid #374151 !important;
+        }
+
+        /* Paginación */
+        .dataTables_wrapper .dataTables_paginate .paginate_button.current,
+        .dataTables_wrapper .dataTables_paginate .paginate_button.current:hover {
+            background: #4f46e5 !important;
+            /* indigo-600 */
+            border: none;
+            color: white !important;
+            border-radius: 0.375rem;
+        }
+
+        .dataTables_wrapper .dataTables_paginate .paginate_button {
+            color: #9ca3af !important;
+            border-radius: 0.375rem;
+        }
+
+        .dataTables_wrapper .dataTables_paginate .paginate_button:hover {
+            background: #374151 !important;
+            border: none;
+            color: white !important;
+        }
+    </style>
 </head>
 
-<body>
-    <div class="bg-gray-900 min-h-screen">
+<body class="bg-gray-900 text-gray-100 font-sans antialiased">
 
-        <div class="container mx-auto px-4 py-8">
-            <div class="flex justify-between items-center mb-6">
-                <h1 class="text-3xl font-bold text-white tracking-tight">
-                    <%= var_title %>
-                </h1>
+    <div class="min-h-screen p-6">
+        <div class="max-w-7xl mx-auto">
+
+            <div class="flex flex-col md:flex-row justify-between items-center mb-8 gap-4">
+                <div>
+                    <h1 class="text-3xl font-extrabold text-white tracking-tight">
+                        <i class="fa-solid fa-users-gear text-indigo-500 mr-2"></i>
+                        <%= var_title %>
+                    </h1>
+                    <p class="text-gray-400 text-sm mt-1">Manage your game users effectively.</p>
+                </div>
+
                 <a href="/crud/create"
-                    class="inline-flex items-center px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium rounded-md shadow-sm transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20"
-                        fill="currentColor">
-                        <path fill-rule="evenodd"
-                            d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z"
-                            clip-rule="evenodd" />
-                    </svg>
-                    Create Player
+                    class="inline-flex items-center px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-lg shadow-lg shadow-indigo-500/30 transition-all duration-200 transform hover:-translate-y-0.5">
+                    <i class="fa-solid fa-plus mr-2"></i> New Player
                 </a>
             </div>
 
-            <div class="bg-gray-800 rounded-lg shadow-xl overflow-hidden border border-gray-700">
-                <div class="overflow-x-auto">
-                    <table class="min-w-full divide-y divide-gray-700">
-                        <thead class="bg-gray-900/50">
+            <div class="bg-gray-800 rounded-xl shadow-2xl overflow-hidden border border-gray-700">
+                <div class="p-6">
+                    <table id="table" class="w-full text-left border-collapse">
+                        <thead>
                             <tr>
-                                <th scope="col"
-                                    class="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
-                                    Id</th>
-                                <th scope="col"
-                                    class="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
-                                    Name</th>
-                                <th scope="col"
-                                    class="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
-                                    Mail</th>
-                                <th scope="col"
-                                    class="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
-                                    Active</th>
-                                <th scope="col"
-                                    class="px-6 py-3 text-right text-xs font-medium text-gray-400 uppercase tracking-wider">
+                                <th
+                                    class="text-xs font-bold text-gray-400 uppercase tracking-wider border-b border-gray-700 pb-3">
+                                    ID</th>
+                                <th
+                                    class="text-xs font-bold text-gray-400 uppercase tracking-wider border-b border-gray-700 pb-3">
+                                    User</th>
+                                <th
+                                    class="text-xs font-bold text-gray-400 uppercase tracking-wider border-b border-gray-700 pb-3">
+                                    Email</th>
+                                <th
+                                    class="text-xs font-bold text-gray-400 uppercase tracking-wider border-b border-gray-700 pb-3 text-center">
+                                    Status</th>
+                                <th
+                                    class="text-xs font-bold text-gray-400 uppercase tracking-wider border-b border-gray-700 pb-3 text-right">
                                     Actions</th>
                             </tr>
                         </thead>
-                        <tbody class="divide-y divide-gray-700">
+                        <tbody class="text-sm text-gray-300 divide-y divide-gray-700">
                             <% items.forEach(item=> { %>
-                                <tr class="hover:bg-gray-700/50 transition-colors duration-150">
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
-                                        <%= item.id_player %>
+                                <tr class="group transition-colors">
+
+                                    <td class="py-4 font-mono text-gray-500">#<%= item.id_player %>
                                     </td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-white">
-                                        <%= item.user %>
+
+                                    <td class="py-4">
+                                        <div class="flex items-center">
+                                            <div
+                                                class="h-8 w-8 rounded-full bg-indigo-900/50 flex items-center justify-center text-indigo-400 mr-3 border border-indigo-700">
+                                                <i class="fa-solid fa-user text-xs"></i>
+                                            </div>
+                                            <span
+                                                class="font-medium text-white group-hover:text-indigo-300 transition-colors">
+                                                <%= item.user %>
+                                            </span>
+                                        </div>
                                     </td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
+
+                                    <td class="py-4 text-gray-400">
                                         <%= item.email %>
                                     </td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm">
+
+                                    <td class="py-4 text-center">
                                         <% if (item.active) { %>
                                             <span
-                                                class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
+                                                class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                                                <span
+                                                    class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
                                                 Active
                                             </span>
                                             <% } else { %>
                                                 <span
-                                                    class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">
-                                                    Inactive
+                                                    class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-rose-500/10 text-rose-400 border border-rose-500/20">
+                                                    <span class="w-1.5 h-1.5 rounded-full bg-rose-400"></span> Inactive
                                                 </span>
                                                 <% } %>
                                     </td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                                        <a href="/crud/edit/<%= item.id_player %>"
-                                            class="text-indigo-400 hover:text-indigo-300 mr-4 transition-colors duration-200">Edit</a>
-                                        <a href="/crud/delete/<%= item.id_player %>"
-                                            class="text-red-400 hover:text-red-300 transition-colors duration-200">Delete</a>
+
+                                    <td class="py-4 text-right">
+                                        <div class="flex justify-end gap-2">
+                                            <a href="/crud/edit/<%= item.id_player %>"
+                                                class="p-2 bg-gray-700 hover:bg-indigo-600 text-gray-300 hover:text-white rounded-lg transition-colors duration-200"
+                                                title="Edit">
+                                                <i class="fa-solid fa-pen-to-square"></i>
+                                            </a>
+
+                                            <button onclick="confirmDelete(<%= item.id_player %>)"
+                                                class="p-2 bg-gray-700 hover:bg-rose-600 text-gray-300 hover:text-white rounded-lg transition-colors duration-200"
+                                                title="Delete">
+                                                <i class="fa-solid fa-trash-can"></i>
+                                            </button>
+                                        </div>
                                     </td>
                                 </tr>
                                 <% }) %>
@@ -89,6 +189,51 @@
             </div>
         </div>
     </div>
+    <!-- Scripts -->
+    <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.4/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <script>
+        $(document).ready(function () {
+            $('#table').DataTable({
+                responsive: true,
+                language: {
+                    search: "_INPUT_",
+                    searchPlaceholder: "Search players...",
+                    lengthMenu: "Show _MENU_",
+                    info: "Showing _START_ to _END_ of _TOTAL_ players",
+                    paginate: {
+                        first: '<i class="fas fa-angle-double-left"></i>',
+                        last: '<i class="fas fa-angle-double-right"></i>',
+                        next: '<i class="fas fa-angle-right"></i>',
+                        previous: '<i class="fas fa-angle-left"></i>'
+                    }
+                },
+                columnDefs: [
+                    { orderable: false, targets: 4 } // Deshabilitar ordenamiento en columna Acciones
+                ]
+            });
+        });
+
+        function confirmDelete(id) {
+            Swal.fire({
+                title: 'Are you sure?',
+                text: "You won't be able to revert this!",
+                icon: 'warning',
+                background: '#1f2937', // bg-gray-800
+                color: '#fff',
+                showCancelButton: true,
+                confirmButtonColor: '#e11d48', // rose-600
+                cancelButtonColor: '#4b5563', // gray-600
+                confirmButtonText: 'Yes, delete it!'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    window.location.href = '/crud/delete/' + id;
+                }
+            })
+        }
+    </script>
 </body>
 
 </html>

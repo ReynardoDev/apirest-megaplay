@@ -1,10 +1,11 @@
 import { Router } from "express";
-import { getPlayerLogin,getPlayerRegister, getProtected } from "../controller/login.controller.js";
+import { getPlayerLogin, getProtected, login } from "../controller/login.controller.js";
 
 const router = Router();
 
+
+router.get("/player/form_login", login);
 router.post("/player/login", getPlayerLogin);
-router.post("/player/register", getPlayerRegister);
 router.get("/player/protected", getProtected);
 
 export default router;

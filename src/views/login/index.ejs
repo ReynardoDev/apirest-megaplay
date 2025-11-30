@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+
+<body class="h-full bg-gray-900">
+    <div class="flex min-h-screen flex-col justify-center py-12 px-6 lg:px-8">
+
+        <div class="sm:mx-auto sm:w-full sm:max-w-md">
+            <!--
+            <img class="mx-auto h-12 w-auto" src="https://tailwindui.com/img/logos/mark.svg?color=indigo&shade=500"
+                alt="Logo">
+            -->
+            <h2 class="mt-6 text-center text-3xl font-bold tracking-tight text-white">Sign in to your account</h2>
+        </div>
+
+        <div class="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
+            <div class="bg-gray-800 py-8 px-4 shadow-xl sm:rounded-lg sm:px-10 border border-gray-700">
+
+                <form id="loginForm" class="space-y-6">
+
+                    <div>
+                        <label for="email" class="block text-sm font-medium leading-6 text-gray-200">Email
+                            address</label>
+                        <div class="mt-2">
+                            <input id="email" name="email" type="email" autocomplete="email" required
+                                class="block w-full rounded-md border-0 bg-gray-700/50 py-1.5 text-white shadow-sm ring-1 ring-inset ring-gray-600 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-500 sm:text-sm sm:leading-6 pl-3">
+                        </div>
+                    </div>
+
+                    <div>
+                        <label for="password" class="block text-sm font-medium leading-6 text-gray-200">Password</label>
+                        <div class="mt-2">
+                            <input id="password" name="password" type="password" autocomplete="current-password"
+                                required
+                                class="block w-full rounded-md border-0 bg-gray-700/50 py-1.5 text-white shadow-sm ring-1 ring-inset ring-gray-600 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-500 sm:text-sm sm:leading-6 pl-3">
+                        </div>
+                    </div>
+
+                    <div id="errorMessage" class="hidden rounded-md bg-red-900/50 p-3">
+                        <div class="flex">
+                            <div class="flex-shrink-0">
+                                <i class="fa-solid fa-circle-xmark text-red-400"></i>
+                            </div>
+                            <div class="ml-3">
+                                <h3 class="text-sm font-medium text-red-200" id="errorText">Error de login</h3>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div>
+                        <button type="submit" id="btnSubmit"
+                            class="group relative flex w-full justify-center rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 transition-colors duration-200">
+
+                            <span class="absolute inset-y-0 left-0 flex items-center pl-3">
+                                <i class="fa-solid fa-lock h-5 w-5 text-indigo-300 group-hover:text-indigo-200"></i>
+                            </span>
+
+                            Sign in
+                        </button>
+                    </div>
+                </form>
+
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const loginForm = document.getElementById('loginForm');
+        const errorMessage = document.getElementById('errorMessage');
+        const errorText = document.getElementById('errorText');
+        const btnSubmit = document.getElementById('btnSubmit');
+
+        loginForm.addEventListener('submit', async (e) => {
+            e.preventDefault(); // Detiene el envío normal del formulario
+
+            // 1. Obtener datos
+            const formData = new FormData(loginForm);
+            const data = Object.fromEntries(formData.entries());
+
+            // UI: Desactivar botón
+            btnSubmit.disabled = true;
+            btnSubmit.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Checking...';
+            errorMessage.classList.add('hidden');
+
+            try {
+                // 2. Enviar petición al backend
+                const response = await fetch('/api/player/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(data)
+                });
+
+                const result = await response.json();
+
+                if (response.ok) {
+                    // 3. ÉXITO: Redirigir al dashboard (CRUD)
+                    // La cookie ya se guardó automáticamente gracias a tu backend
+                    window.location.href = '/crud';
+                } else {
+                    // 4. ERROR: Mostrar mensaje
+                    throw new Error(result.message || 'Error desconocido');
+                }
+
+            } catch (error) {
+                console.error(error);
+                errorText.textContent = error.message;
+                errorMessage.classList.remove('hidden');
+
+                // Restaurar botón
+                btnSubmit.disabled = false;
+                btnSubmit.innerHTML = `
+                    <span class="absolute inset-y-0 left-0 flex items-center pl-3">
+                        <i class="fa-solid fa-lock h-5 w-5 text-indigo-300 group-hover:text-indigo-200"></i>
+                    </span> Sign in`;
+            }
+        });
+    </script>
+</body>
+
+</html>
