@@ -50,12 +50,30 @@
                     </div>
 
                     <div>
-                        <label for="active" class="block text-sm/6 font-medium text-gray-100">Active</label>
+                        <label for="kyc_status" class="block text-sm/6 font-medium text-gray-100">KYC Status</label>
                         <div class="mt-2">
-                            <select id="active" name="active" required
+                            <select id="kyc_status" name="kyc_status" required
                                 class="block w-full rounded-md bg-gray-800 px-3 py-1.5 text-base text-white outline-1 -outline-offset-1 outline-white/10 placeholder:text-gray-500 focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-500 sm:text-sm/6">
-                                <option value="1" <%=item.active===1 ? 'selected' : '' %>>Active</option>
-                                <option value="0" <%=item.active===0 ? 'selected' : '' %>>Inactive</option>
+                                <option value="verified" <%=item.kyc_status==='verified' ? 'selected' : '' %>>Verified
+                                </option>
+                                <option value="pending" <%=item.kyc_status==='pending' ? 'selected' : '' %>>Pending
+                                </option>
+                                <option value="rejected" <%=item.kyc_status==='rejected' ? 'selected' : '' %>>Rejected
+                                </option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label for="status" class="block text-sm/6 font-medium text-gray-100">Status</label>
+                        <div class="mt-2">
+                            <select id="status" name="status" required
+                                class="block w-full rounded-md bg-gray-800 px-3 py-1.5 text-base text-white outline-1 -outline-offset-1 outline-white/10 placeholder:text-gray-500 focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-500 sm:text-sm/6">
+                                <option value="active" <%=item.status==='active' ? 'selected' : '' %>>Active</option>
+                                <option value="banned" <%=item.status==='banned' ? 'selected' : '' %>>Banned</option>
+                                <option value="self_excluded" <%=item.status==='self_excluded' ? 'selected' : '' %>>Self
+                                    Excluded
+                                </option>
                             </select>
                         </div>
                     </div>

@@ -47,6 +47,30 @@
                     </div>
 
                     <div>
+                        <label for="status" class="block text-sm/6 font-medium text-gray-100">Status</label>
+                        <div class="mt-2">
+                            <select id="status" name="status" required
+                                class="block w-full rounded-md bg-gray-800 px-3 py-1.5 text-base text-white outline-1 -outline-offset-1 outline-white/10 placeholder:text-gray-500 focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-500 sm:text-sm/6">
+                                <option value="active">Active</option>
+                                <option value="banned">Banned</option>
+                                <option value="self_excluded">Self Excluded</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label for="kyc_status" class="block text-sm/6 font-medium text-gray-100">KYC Status</label>
+                        <div class="mt-2">
+                            <select id="kyc_status" name="kyc_status" required
+                                class="block w-full rounded-md bg-gray-800 px-3 py-1.5 text-base text-white outline-1 -outline-offset-1 outline-white/10 placeholder:text-gray-500 focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-500 sm:text-sm/6">
+                                <option value="pending">Pending</option>
+                                <option value="approved">Approved</option>
+                                <option value="rejected">Rejected</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div>
                         <button type="submit"
                             class="flex w-full justify-center rounded-md bg-indigo-500 px-3 py-1.5 text-sm/6 font-semibold text-white hover:bg-indigo-400 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500">
                             Save

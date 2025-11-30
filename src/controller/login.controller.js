@@ -3,9 +3,14 @@ import validator from 'validator';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 
-// Las variables JWT_SECRET y JWT_EXPIRES deben estar en tu archivo .env
+// Validación básica de variables de entorno para evitar errores silenciosos
 const JWT_SECRET = process.env.JWT_SECRET;
 const JWT_EXPIRES = process.env.JWT_EXPIRES || '1h';
+
+if (!JWT_SECRET) {
+    console.error("FATAL ERROR: JWT_SECRET no está definido en el archivo .env");
+    process.exit(1);
+}
 
 /*
  * =========================================================
@@ -13,10 +18,19 @@ const JWT_EXPIRES = process.env.JWT_EXPIRES || '1h';
  * =========================================================
  */
 export const login = (req, res) => {
-    // Solo renderizamos la vista. No leemos req.body aquí.
+    // req.session.user viene de tu middleware 'verifyToken' que configuramos antes
+    const { user } = req.session || {};
+    const { message } = req.query;
+
+    // Si ya está logueado, redirigir al dashboard/crud
+    if (user) {
+        return res.redirect('/crud');
+    }
+
     res.render("login/index", {
         title: "Login",
-        message: null
+        message: message,
+        user: null
     });
 };
 
@@ -29,14 +43,14 @@ export const getPlayerLogin = async (req, res) => {
     const { email, password } = req.body;
 
     try {
-        // 1. Buscamos al usuario
+        // 1. Buscamos al usuario (Verificamos también que no esté baneado)
         const [rows] = await pool.query(
-            "SELECT id_player, user, email, password FROM players WHERE email = ? AND active = 1",
+            "SELECT id_player, user, email, password FROM players WHERE email = ? AND status != 'banned'",
             [email]
         );
 
         if (rows.length <= 0) {
-            return res.status(401).json({ message: "Credenciales inválidas" });
+            return res.status(401).json({ message: "Credenciales inválidas o cuenta suspendida" });
         }
 
         const player = rows[0];
@@ -49,25 +63,28 @@ export const getPlayerLogin = async (req, res) => {
         }
 
         // 3. Generar el Token
-        const token = jwt.sign({ id: player.id_player }, JWT_SECRET, { expiresIn: JWT_EXPIRES });
+        const token = jwt.sign({
+            id: player.id_player,
+            user: player.user // Útil guardar el nombre en el token
+        }, JWT_SECRET, { expiresIn: JWT_EXPIRES });
+
         const maxAgeMs = JWT_EXPIRES === '1h' ? 60 * 60 * 1000 : 3600000;
 
-        // 4. Setear Cookie Segura (CORREGIDO)
+        // 4. Setear Cookie Segura
         res.cookie("access_token", token, {
             httpOnly: true,
-            secure: false,   // false para localhost (http)
-            sameSite: 'lax', // lax para que funcione la navegación local
-            // ❌ ELIMINADA LA LÍNEA: domain: 'localhost' 
+            secure: false,   // false para localhost
+            sameSite: 'lax',
             maxAge: maxAgeMs
         });
 
         // 5. Respuesta
         const { password: _, ...playerWithoutPassword } = player;
 
-        res.json({
+        res.status(200).json({
             message: "Login exitoso",
             player: playerWithoutPassword,
-            token: token // Enviamos también el token por si el frontend lo necesita manualmente
+            // token: token // No es estrictamente necesario enviarlo si ya va en cookie, pero ayuda al debug
         });
 
     } catch (error) {
@@ -76,32 +93,49 @@ export const getPlayerLogin = async (req, res) => {
     }
 }
 
+/*
+ * =========================================================
+ * Controlador PROTEGIDO (Dashboard/Vista)
+ * =========================================================
+ */
+export const getProtected = (req, res) => {
+    // Asumimos que el middleware 'verifyToken' ya llenó req.session.user
+    const { user } = req.session || {};
 
-
-
-export const getProtected = async (req, res) => {
-    const token = req.cookies.access_token;
-    if (!token) {
-        return res.status(401).json({ message: "Acceso no autorizado" });
+    if (!user) {
+        // Si es una vista, redirigimos. Si es API, devolvemos 403.
+        // Como usas res.render, asumimos que es VISTA.
+        return res.redirect('/api/player/form_login?message=Debes iniciar sesión');
     }
-    try {
-        const data = jwt.verify(token, JWT_SECRET);
-        res.json({ message: "Acceso autorizado", data });
-    } catch (error) {
-        console.error("Error en getProtecterd:", error);
-        res.status(401).json({ message: "Acceso no autorizado" });
-    }
+
+    // 🛑 CORRECCIÓN: Solo respondemos UNA VEZ
+    res.render("login/protected", {
+        title: "Protected Area",
+        user: user
+    });
 }
 
-
-//Revisar
-export const getPlayerLogout = async (req, res) => {
+/*
+ * =========================================================
+ * Controlador de LOGOUT
+ * =========================================================
+ */
+export const getPlayerLogout = (req, res) => {
     try {
+        // 1. Borrar cookie
         res.clearCookie("access_token");
-        res.json({ message: "Logout exitoso" });
+
+        // 2. Limpiar sesión en memoria (si la usas)
+        if (req.session) req.session.user = null;
+
+        // 3. Responder (Para API JSON)
+        // res.json({ message: "Logout exitoso" });
+
+        // 3. Responder (Para Web App - Redirección)
+        res.redirect('/api/player/form_login');
+
     } catch (error) {
         console.error("Error en getPlayerLogout:", error);
-        res.status(500).json({ message: "Error interno del servidor" });
+        res.status(500).json({ message: "Error al cerrar sesión" });
     }
 }
-

@@ -20,20 +20,22 @@ export const getPlayerList = async (req, res) => {
 export const renderCreateForm = (req, res) => {
     res.render("player/create", {
         item: {},
-        error: null // Importante para que no falle el if(error) en la vista
+        error: null,
+        message: null,
     });
 }
 
 // --- PROCESAR CREACIÓN (POST) ---
 export const playerCreate = async (req, res) => {
     try {
-        const { user, password, email, active } = req.body;
+        const { user, password, email, kyc_status, status } = req.body;
 
         // 1. Validación básica
         if (!user || !password || !email) {
             return res.render("player/create", {
                 error: "Todos los campos son obligatorios",
-                item: req.body // Mantenemos lo que escribió
+                item: req.body,
+                message: null,
             });
         }
 
@@ -41,13 +43,14 @@ export const playerCreate = async (req, res) => {
         const hashedPassword = await bcrypt.hash(password, salt);
         const cleanUser = user.trim();
         const cleanEmail = email.trim();
-        const isActive = active !== undefined ? active : 1;
+        const isActive = status !== undefined ? status : 'active';
+        const isKYC = kyc_status !== undefined ? kyc_status : 'pending';
         let chips_bono = 100;
 
         // 2. Insertar Jugador
         const [result] = await pool.query(
-            "INSERT INTO players (user, password, email, active) VALUES (?, ?, ?, ?)",
-            [cleanUser, hashedPassword, cleanEmail, isActive]
+            "INSERT INTO players (user, password, email, kyc_status, status, created_at) VALUES (?, ?, ?, ?, ?, ?)",
+            [cleanUser, hashedPassword, cleanEmail, isKYC, isActive, new Date()]
         );
 
         // 3. Insertar Wallet
@@ -58,13 +61,16 @@ export const playerCreate = async (req, res) => {
 
         // 4. ÉXITO: Redirigir a la lista principal
         // NO enviamos JSON, porque venimos de un formulario HTML
-        res.redirect('/crud');
+        res.redirect('/crud', {
+            message: "Jugador creado exitosamente",
+        });
 
     } catch (error) {
         console.error("Error en playerCreate:", error);
         res.render("player/create", {
             error: "Error al guardar: " + error.message,
-            item: req.body
+            item: req.body,
+            message: null,
         });
     }
 }
@@ -93,12 +99,13 @@ export const playerEdit = async (req, res) => {
 // --- PROCESAR EDICIÓN (POST) ---
 export const playerUpdate = async (req, res) => {
     const { id } = req.params;
-    const { user, password, email, active } = req.body;
+    const { user, password, email, kyc_status, status, active } = req.body;
 
     try {
         const cleanUser = user.trim();
         const cleanEmail = email.trim();
-        const isActive = active !== undefined ? active : 1;
+        const isKYC = kyc_status !== undefined ? kyc_status : 'pending';
+        const isStatus = status !== undefined ? status : 'active';
 
         // Lógica: Si el usuario escribió contraseña nueva, la actualizamos.
         // Si la dejó vacía, mantenemos la vieja.
@@ -107,14 +114,14 @@ export const playerUpdate = async (req, res) => {
             const hashedPassword = await bcrypt.hash(password, salt);
 
             await pool.query(
-                "UPDATE players SET user = ?, password = ?, email = ?, active = ? WHERE id_player = ?",
-                [cleanUser, hashedPassword, cleanEmail, isActive, id]
+                "UPDATE players SET user = ?, password = ?, email = ?, kyc_status = ?, status = ? WHERE id_player = ?",
+                [cleanUser, hashedPassword, cleanEmail, isKYC, isStatus, id]
             );
         } else {
             // Actualizamos todo MENOS la contraseña
             await pool.query(
-                "UPDATE players SET user = ?, email = ?, active = ? WHERE id_player = ?",
-                [cleanUser, cleanEmail, isActive, id]
+                "UPDATE players SET user = ?, email = ?, kyc_status = ?, status = ? WHERE id_player = ?",
+                [cleanUser, cleanEmail, isKYC, isStatus, id]
             );
         }
 

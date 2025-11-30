@@ -120,10 +120,14 @@
                                     Email</th>
                                 <th
                                     class="text-xs font-bold text-gray-400 uppercase tracking-wider border-b border-gray-700 pb-3 text-center">
-                                    Status</th>
+                                    KYC Status</th>
                                 <th
-                                    class="text-xs font-bold text-gray-400 uppercase tracking-wider border-b border-gray-700 pb-3 text-right">
-                                    Actions</th>
+                                    class="text-xs font-bold text-gray-400 uppercase tracking-wider border-b border-gray-700 pb-3 text-center">
+                                    Status</th>
+
+                                <th
+                                    class="text-xs font-bold text-gray-400 uppercase tracking-wider border-b border-gray-700 pb-3 text-center">
+                                    Created At</th>
                             </tr>
                         </thead>
                         <tbody class="text-sm text-gray-300 divide-y divide-gray-700">
@@ -150,20 +154,58 @@
                                         <%= item.email %>
                                     </td>
 
+
                                     <td class="py-4 text-center">
-                                        <% if (item.active) { %>
+                                        <!-- 'pending','verified','rejected' -->
+                                        <% if (item.kyc_status==='verified' ) { %>
                                             <span
                                                 class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
                                                 <span
                                                     class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
-                                                Active
+                                                verified
                                             </span>
-                                            <% } else { %>
+                                            <% } else if (item.kyc_status==='pending' ) { %>
+                                                <span
+                                                    class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-orange-500/10 text-orange-400 border border-orange-500/20">
+                                                    <span class="w-1.5 h-1.5 rounded-full bg-orange-400"></span> pending
+                                                </span>
+                                                <% } else { %>
+                                                    <span
+                                                        class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-rose-500/10 text-rose-400 border border-rose-500/20">
+                                                        <span class="w-1.5 h-1.5 rounded-full bg-rose-400"></span>
+                                                        rejected
+                                                    </span>
+                                                    <% } %>
+                                    </td>
+
+
+                                    <td class="py-4 text-center">
+                                        <!-- 'active','banned','self_excluded'-->
+                                        <% if (item.status==='active' ) { %>
+                                            <span
+                                                class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                                                <span
+                                                    class="w-1.5    h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                                                active
+                                            </span>
+                                            <% } else if (item.status==='banned' ) { %>
                                                 <span
                                                     class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-rose-500/10 text-rose-400 border border-rose-500/20">
-                                                    <span class="w-1.5 h-1.5 rounded-full bg-rose-400"></span> Inactive
+                                                    <span class="w-1.5 h-1.5 rounded-full bg-rose-400"></span> banned
                                                 </span>
-                                                <% } %>
+                                                <% } else { %>
+                                                    <span
+                                                        class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-orange-500/10 text-orange-400 border border-orange-500/20">
+                                                        <span class="w-1.5 h-1.5 rounded-full bg-orange-400"></span>
+                                                        self_excluded
+                                                    </span>
+                                                    <% } %>
+                                    </td>
+
+
+                                    <td class="py-4 text-center text-xs text-gray-500">
+                                        <%= new Date(item.created_at).toLocaleDateString('es-ES', { year: 'numeric' ,
+                                            month: 'short' , day: 'numeric' }) %>
                                     </td>
 
                                     <td class="py-4 text-right">
@@ -211,7 +253,7 @@
                     }
                 },
                 columnDefs: [
-                    { orderable: false, targets: 4 } // Deshabilitar ordenamiento en columna Acciones
+                    { orderable: false, targets: 6 } // Deshabilitar ordenamiento en columna Acciones
                 ]
             });
         });
