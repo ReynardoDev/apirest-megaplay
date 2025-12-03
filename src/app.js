@@ -9,6 +9,7 @@ import jwt from 'jsonwebtoken'; // 1. IMPORTAR JWT
 import indexRoutes from "./routes/index.routes.js";
 import walletRoutes from "./routes/wallet.routes.js";
 import gameRoutes from "./routes/game.routes.js";
+import homeRoutes from "./routes/home.routes.js";
 import loginRoutes from "./routes/login.routes.js";
 import playerCrudRoutes from "./routes/player.crud.routes.js";
 
@@ -55,6 +56,7 @@ const verifyToken = (req, res, next) => {
 // --- RUTAS ---
 
 app.use(indexRoutes);
+app.use(homeRoutes);
 
 // Rutas Públicas (No requieren token)
 app.use('/api', loginRoutes); // El login debe ser público
