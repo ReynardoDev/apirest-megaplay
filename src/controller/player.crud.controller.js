@@ -28,12 +28,12 @@ export const renderCreateForm = (req, res) => {
 // --- PROCESAR CREACIÓN (POST) ---
 export const playerCreate = async (req, res) => {
     try {
-        const { user, password, email, kyc_status, status } = req.body;
+        const { name, username, password, email, phone, country } = req.body;
 
         // 1. Validación básica
-        if (!user || !password || !email) {
+        if (!name || !username || !password || !email) {
             return res.render("player/create", {
-                error: "Todos los campos son obligatorios",
+                error: "Todos los campos obligatorios deben ser completados (nombre, usuario, contraseña, email)",
                 item: req.body,
                 message: null,
             });
@@ -41,16 +41,19 @@ export const playerCreate = async (req, res) => {
 
         const salt = await bcrypt.genSalt(10);
         const hashedPassword = await bcrypt.hash(password, salt);
-        const cleanUser = user.trim();
+        const cleanName = name.trim();
+        const cleanUsername = username.trim();
         const cleanEmail = email.trim();
-        const isActive = status !== undefined ? status : 'active';
-        const isKYC = kyc_status !== undefined ? kyc_status : 'pending';
-        let chips_bono = 100;
+        const cleanPhone = phone ? phone.trim() : null;
+        const cleanCountry = country ? country.trim().toUpperCase() : null;
+        let chips_bono = 1000;
 
-        // 2. Insertar Jugador
+        // 2. Insertar Jugador (estructura correcta de fair_play_casino)
         const [result] = await pool.query(
-            "INSERT INTO players (user, password, email, kyc_status, status, created_at) VALUES (?, ?, ?, ?, ?, ?)",
-            [cleanUser, hashedPassword, cleanEmail, isKYC, isActive, new Date()]
+            `INSERT INTO players 
+            (name, username, email, password_hash, phone, country, status, email_verified) 
+            VALUES (?, ?, ?, ?, ?, ?, 'ACTIVE', TRUE)`,
+            [cleanName, cleanUsername, cleanEmail, hashedPassword, cleanPhone, cleanCountry]
         );
 
         // 3. Insertar Wallet
@@ -59,16 +62,25 @@ export const playerCreate = async (req, res) => {
             [result.insertId, chips_bono]
         );
 
-        // 4. ÉXITO: Redirigir a la lista principal
-        // NO enviamos JSON, porque venimos de un formulario HTML
-        res.redirect('/crud', {
-            message: "Jugador creado exitosamente",
-        });
+        // 4. ÉXITO: Redirigir a la lista principal con mensaje
+        res.redirect('/crud?message=Jugador creado exitosamente');
 
     } catch (error) {
         console.error("Error en playerCreate:", error);
+
+        // Manejar errores específicos
+        let errorMessage = "Error al guardar: " + error.message;
+
+        if (error.code === 'ER_DUP_ENTRY') {
+            if (error.message.includes('email')) {
+                errorMessage = "Este email ya está registrado";
+            } else if (error.message.includes('username')) {
+                errorMessage = "Este nombre de usuario ya está en uso";
+            }
+        }
+
         res.render("player/create", {
-            error: "Error al guardar: " + error.message,
+            error: errorMessage,
             item: req.body,
             message: null,
         });
@@ -99,13 +111,13 @@ export const playerEdit = async (req, res) => {
 // --- PROCESAR EDICIÓN (POST) ---
 export const playerUpdate = async (req, res) => {
     const { id } = req.params;
-    const { user, password, email, kyc_status, status, active } = req.body;
+    const { name, username, password, email, status } = req.body;
 
     try {
-        const cleanUser = user.trim();
-        const cleanEmail = email.trim();
-        const isKYC = kyc_status !== undefined ? kyc_status : 'pending';
-        const isStatus = status !== undefined ? status : 'active';
+        const cleanName = name ? name.trim() : '';
+        const cleanUsername = username ? username.trim() : '';
+        const cleanEmail = email ? email.trim() : '';
+        const playerStatus = status || 'ACTIVE';
 
         // Lógica: Si el usuario escribió contraseña nueva, la actualizamos.
         // Si la dejó vacía, mantenemos la vieja.
@@ -114,14 +126,18 @@ export const playerUpdate = async (req, res) => {
             const hashedPassword = await bcrypt.hash(password, salt);
 
             await pool.query(
-                "UPDATE players SET user = ?, password = ?, email = ?, kyc_status = ?, status = ? WHERE id_player = ?",
-                [cleanUser, hashedPassword, cleanEmail, isKYC, isStatus, id]
+                `UPDATE players 
+                SET name = ?, username = ?, password_hash = ?, email = ?, status = ? 
+                WHERE id_player = ?`,
+                [cleanName, cleanUsername, hashedPassword, cleanEmail, playerStatus, id]
             );
         } else {
             // Actualizamos todo MENOS la contraseña
             await pool.query(
-                "UPDATE players SET user = ?, email = ?, kyc_status = ?, status = ? WHERE id_player = ?",
-                [cleanUser, cleanEmail, isKYC, isStatus, id]
+                `UPDATE players 
+                SET name = ?, username = ?, email = ?, status = ? 
+                WHERE id_player = ?`,
+                [cleanName, cleanUsername, cleanEmail, playerStatus, id]
             );
         }
 

@@ -24,7 +24,7 @@ export const login = (req, res) => {
 
     // Si ya está logueado, redirigir al dashboard/crud
     if (user) {
-        return res.redirect('/crud');
+        return res.redirect('/home');
     }
 
     res.render("login/index", {
@@ -45,7 +45,7 @@ export const getPlayerLogin = async (req, res) => {
     try {
         // 1. Buscamos al usuario (Verificamos también que no esté baneado)
         const [rows] = await pool.query(
-            "SELECT id_player, user, email, password FROM players WHERE email = ? AND status != 'banned'",
+            "SELECT id_player, username, email, password_hash FROM players WHERE email = ? AND status != 'BANNED'",
             [email]
         );
 
@@ -56,7 +56,7 @@ export const getPlayerLogin = async (req, res) => {
         const player = rows[0];
 
         // 2. Comparamos la contraseña
-        const esCorrecta = await bcrypt.compare(password, player.password);
+        const esCorrecta = await bcrypt.compare(password, player.password_hash);
 
         if (!esCorrecta) {
             return res.status(401).json({ message: "Credenciales inválidas" });
@@ -65,7 +65,7 @@ export const getPlayerLogin = async (req, res) => {
         // 3. Generar el Token
         const token = jwt.sign({
             id: player.id_player,
-            user: player.user // Útil guardar el nombre en el token
+            user: player.username // Útil guardar el nombre en el token
         }, JWT_SECRET, { expiresIn: JWT_EXPIRES });
 
         const maxAgeMs = JWT_EXPIRES === '1h' ? 60 * 60 * 1000 : 3600000;

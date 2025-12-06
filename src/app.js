@@ -12,6 +12,7 @@ import gameRoutes from "./routes/game.routes.js";
 import homeRoutes from "./routes/home.routes.js";
 import loginRoutes from "./routes/login.routes.js";
 import playerCrudRoutes from "./routes/player.crud.routes.js";
+import registerRoutes from "./routes/register.routes.js";
 
 // Middlewares
 import { jsonSyntaxErrorHandler } from "./middlewares/errorHandler.js";
@@ -26,10 +27,56 @@ const JWT_SECRET = process.env.JWT_SECRET;
 const app = express();
 
 // --- MIDDLEWARES GLOBALES ---
-app.use(cors());
+app.use(cors({
+    origin: true, // En desarrollo, acepta cualquier origen
+    credentials: true // 🔑 Permite envío de cookies
+}));
 app.use(express.json()); // Solo una vez
 app.use(express.urlencoded({ extended: true })); // Para formularios HTML
 app.use(cookieParser());
+
+// Middleware para inyectar datos del usuario en todas las vistas
+app.use(async (req, res, next) => {
+    const token = req.cookies.access_token;
+    res.locals.user = null; // Por defecto, no hay usuario
+
+    if (token) {
+        try {
+            const data = jwt.verify(token, JWT_SECRET);
+
+            // Obtener los chips actuales del usuario desde la base de datos
+            const { pool } = await import('./db.js');
+            const [rows] = await pool.query(
+                "SELECT chips FROM wallet WHERE id_player = ?",
+                [data.id]
+            );
+
+            // Hacemos disponible el usuario en TODAS las vistas EJS
+            res.locals.user = {
+                id: data.id,
+                name: data.user, // El nombre de usuario viene del token
+                chips: rows.length > 0 ? rows[0].chips : 0 // Chips actuales
+            };
+
+            // 🔍 DEBUG: Ver qué datos se están cargando
+            console.log('✅ Usuario autenticado:', {
+                id: res.locals.user.id,
+                name: res.locals.user.name,
+                chips: res.locals.user.chips
+            });
+
+        } catch (error) {
+            // Token inválido o expirado, simplemente no hay usuario
+            console.log('❌ Error de autenticación:', error.message);
+            res.locals.user = null;
+        }
+    }
+
+    next();
+});
+
+
+
 
 // --- MIDDLEWARE DE AUTENTICACIÓN (Definido, pero no usado globalmente aún) ---
 const verifyToken = (req, res, next) => {
@@ -53,6 +100,11 @@ const verifyToken = (req, res, next) => {
     }
 };
 
+// --- VISTAS ---
+// ⚠️ IMPORTANTE: Configurar vistas ANTES de las rutas
+app.set('view engine', 'ejs');
+app.set('views', path.join(__dirname, 'views'));
+
 // --- RUTAS ---
 
 app.use(indexRoutes);
@@ -60,24 +112,22 @@ app.use(homeRoutes);
 
 // Rutas Públicas (No requieren token)
 app.use('/api', loginRoutes); // El login debe ser público
-app.use('/api', gameRoutes);  // Depende de tu lógica, quizás el juego requiera auth
+app.use('/api', gameRoutes);  // Rutas de juego
+app.use('/register', registerRoutes); // Registro público
 
 // Rutas Protegidas (Requieren token)
 // 👇 AQUÍ APLICAMOS EL MIDDLEWARE SOLO AL CRUD
 app.use('/crud', verifyToken, playerCrudRoutes);
 app.use('/api', walletRoutes); // Quizás quieras proteger la billetera también
 
+// --- MANEJADORES DE ERROR (SIEMPRE AL FINAL) ---
 // Manejador de errores de JSON (Siempre al final de los parsers)
 app.use(jsonSyntaxErrorHandler);
 
-// --- VISTAS ---
-app.set('view engine', 'ejs');
-app.set('views', path.join(__dirname, 'views'));
-
-// 404 Handler
+// 404 Handler - DEBE SER EL ÚLTIMO
 app.use((req, res, next) => {
     res.status(404).json({
-        message: "API not found"
+        message: "404 - Page not found"
     });
 })
 

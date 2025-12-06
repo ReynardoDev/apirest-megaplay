@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>
+        <%= title %> - Fair Play Casino
+    </title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .animate-slide-in {
+            animation: slideIn 0.5s ease-out;
+        }
+
+        @keyframes pulse-glow {
+
+            0%,
+            100% {
+                box-shadow: 0 0 20px rgba(251, 191, 36, 0.3);
+            }
+
+            50% {
+                box-shadow: 0 0 30px rgba(251, 191, 36, 0.5);
+            }
+        }
+
+        .pulse-glow {
+            animation: pulse-glow 2s ease-in-out infinite;
+        }
+    </style>
+</head>
+
+<body class="bg-gradient-to-br from-gray-900 via-purple-900 to-gray-900 min-h-screen">
+    <%- include('../layouts/navbar', { user: user }) %>
+
+        <div class="container mx-auto px-4 py-8 max-w-7xl">
+            <!-- Header -->
+            <div class="mb-8">
+                <h1 class="text-4xl font-bold text-white mb-2">Mi Billetera</h1>
+                <p class="text-gray-400">Gestiona tus chips y revisa tu historial</p>
+            </div>
+
+            <!-- Balance Cards -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                <!-- Balance Actual -->
+                <div
+                    class="bg-gradient-to-br from-amber-500 to-yellow-600 rounded-2xl p-6 shadow-2xl pulse-glow animate-slide-in">
+                    <div class="flex items-center justify-between mb-2">
+                        <span class="text-amber-100 text-sm font-medium">Balance Actual</span>
+                        <svg class="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 20 20">
+                            <path
+                                d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-11a1 1 0 10-2 0v2H7a1 1 0 100 2h2v2a1 1 0 102 0v-2h2a1 1 0 100-2h-2V7z" />
+                        </svg>
+                    </div>
+                    <div class="text-4xl font-bold text-white mb-1">
+                        <%= wallet.chips.toLocaleString() %>
+                    </div>
+                    <div class="text-amber-100 text-xs">Chips disponibles</div>
+                </div>
+
+                <!-- Total Depositado -->
+                <div class="bg-gradient-to-br from-green-600 to-emerald-700 rounded-2xl p-6 shadow-xl animate-slide-in"
+                    style="animation-delay: 0.1s;">
+                    <div class="flex items-center justify-between mb-2">
+                        <span class="text-green-100 text-sm font-medium">Total Depositado</span>
+                        <svg class="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd"
+                                d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-11a1 1 0 10-2 0v3.586L7.707 9.293a1 1 0 00-1.414 1.414l3 3a1 1 0 001.414 0l3-3a1 1 0 00-1.414-1.414L11 10.586V7z"
+                                clip-rule="evenodd" />
+                        </svg>
+                    </div>
+                    <div class="text-3xl font-bold text-white mb-1">
+                        $<%= wallet.total_deposited.toLocaleString() %>
+                    </div>
+                    <div class="text-green-100 text-xs">Histórico de depósitos</div>
+                </div>
+
+                <!-- Total Apostado -->
+                <div class="bg-gradient-to-br from-blue-600 to-indigo-700 rounded-2xl p-6 shadow-xl animate-slide-in"
+                    style="animation-delay: 0.2s;">
+                    <div class="flex items-center justify-between mb-2">
+                        <span class="text-blue-100 text-sm font-medium">Total Apostado</span>
+                        <svg class="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 20 20">
+                            <path
+                                d="M2 11a1 1 0 011-1h2a1 1 0 011 1v5a1 1 0 01-1 1H3a1 1 0 01-1-1v-5zM8 7a1 1 0 011-1h2a1 1 0 011 1v9a1 1 0 01-1 1H9a1 1 0 01-1-1V7zM14 4a1 1 0 011-1h2a1 1 0 011 1v12a1 1 0 01-1 1h-2a1 1 0 01-1-1V4z" />
+                        </svg>
+                    </div>
+                    <div class="text-3xl font-bold text-white mb-1">
+                        $<%= wallet.total_wagered.toLocaleString() %>
+                    </div>
+                    <div class="text-blue-100 text-xs">En todas las jugadas</div>
+                </div>
+
+                <!-- Total Ganado -->
+                <div class="bg-gradient-to-br from-purple-600 to-pink-700 rounded-2xl p-6 shadow-xl animate-slide-in"
+                    style="animation-delay: 0.3s;">
+                    <div class="flex items-center justify-between mb-2">
+                        <span class="text-purple-100 text-sm font-medium">Total Ganado</span>
+                        <svg class="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 20 20">
+                            <path
+                                d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                        </svg>
+                    </div>
+                    <div class="text-3xl font-bold text-white mb-1">
+                        $<%= wallet.total_won.toLocaleString() %>
+                    </div>
+                    <div class="text-purple-100 text-xs">Premios acumulados</div>
+                </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
+                <!-- Comprar Chips -->
+                <a href="/api/wallet/purchase"
+                    class="group bg-gradient-to-r from-amber-500 via-yellow-500 to-amber-500 hover:from-amber-600 hover:via-yellow-600 hover:to-amber-600 text-gray-900 font-bold py-6 px-8 rounded-xl transition-all duration-300 transform hover:scale-105 hover:shadow-2xl hover:shadow-amber-500/50 flex items-center justify-center gap-3">
+                    <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd"
+                            d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-11a1 1 0 10-2 0v2H7a1 1 0 100 2h2v2a1 1 0 102 0v-2h2a1 1 0 100-2h-2V7z"
+                            clip-rule="evenodd" />
+                    </svg>
+                    <span class="text-lg">Comprar Más Chips</span>
+                    <svg class="w-5 h-5 transform group-hover:translate-x-1 transition-transform" fill="currentColor"
+                        viewBox="0 0 20 20">
+                        <path fill-rule="evenodd"
+                            d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z"
+                            clip-rule="evenodd" />
+                    </svg>
+                </a>
+
+                <!-- Ver Juegos -->
+                <a href="/home"
+                    class="group bg-gray-800 hover:bg-gray-700 text-white font-bold py-6 px-8 rounded-xl transition-all duration-300 transform hover:scale-105 hover:shadow-xl border-2 border-gray-700 hover:border-purple-500 flex items-center justify-center gap-3">
+                    <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
+                        <path
+                            d="M2 11a1 1 0 011-1h2a1 1 0 011 1v5a1 1 0 01-1 1H3a1 1 0 01-1-1v-5zM8 7a1 1 0 011-1h2a1 1 0 011 1v9a1 1 0 01-1 1H9a1 1 0 01-1-1V7zM14 4a1 1 0 011-1h2a1 1 0 011 1v12a1 1 0 01-1 1h-2a1 1 0 01-1-1V4z" />
+                    </svg>
+                    <span class="text-lg">Ir a Juegos</span>
+                </a>
+            </div>
+
+            <!-- Historial de Transacciones -->
+            <div class="bg-gray-800/50 backdrop-blur-sm border border-gray-700 rounded-2xl p-6 shadow-2xl">
+                <h2 class="text-2xl font-bold text-white mb-6 flex items-center gap-2">
+                    <svg class="w-6 h-6 text-purple-400" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd"
+                            d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z"
+                            clip-rule="evenodd" />
+                    </svg>
+                    Últimas Transacciones
+                </h2>
+
+                <% if (transactions.length===0) { %>
+                    <div class="text-center py-12">
+                        <svg class="w-16 h-16 text-gray-600 mx-auto mb-4" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd"
+                                d="M4 4a2 2 0 00-2 2v4a2 2 0 002 2V6h10a2 2 0 00-2-2H4zm2 6a2 2 0 012-2h8a2 2 0 012 2v4a2 2 0 01-2 2H8a2 2 0 01-2-2v-4zm6 4a2 2 0 100-4 2 2 0 000 4z"
+                                clip-rule="evenodd" />
+                        </svg>
+                        <p class="text-gray-400 text-lg">No hay transacciones aún</p>
+                        <p class="text-gray-500 text-sm mt-2">Compra chips o juega para ver tu historial</p>
+                    </div>
+                    <% } else { %>
+                        <div class="overflow-x-auto">
+                            <table class="w-full">
+                                <thead>
+                                    <tr class="border-b border-gray-700">
+                                        <th class="text-left py-3 px-4 text-gray-400 font-medium text-sm">Tipo</th>
+                                        <th class="text-left py-3 px-4 text-gray-400 font-medium text-sm">Descripción
+                                        </th>
+                                        <th class="text-right py-3 px-4 text-gray-400 font-medium text-sm">Monto</th>
+                                        <th class="text-right py-3 px-4 text-gray-400 font-medium text-sm">Balance</th>
+                                        <th class="text-right py-3 px-4 text-gray-400 font-medium text-sm">Fecha</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <% transactions.forEach((tx, index)=> { %>
+                                        <tr class="border-b border-gray-700/50 hover:bg-gray-700/30 transition-colors">
+                                            <td class="py-4 px-4">
+                                                <% if (tx.transaction_type==='DEPOSIT' ) { %>
+                                                    <span
+                                                        class="inline-flex items-center gap-1 bg-green-900/30 text-green-400 px-3 py-1 rounded-full text-xs font-medium">
+                                                        <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                                                            <path fill-rule="evenodd"
+                                                                d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-11a1 1 0 10-2 0v3.586L7.707 9.293a1 1 0 00-1.414 1.414l3 3a1 1 0 001.414 0l3-3a1 1 0 00-1.414-1.414L11 10.586V7z"
+                                                                clip-rule="evenodd" />
+                                                        </svg>
+                                                        Depósito
+                                                    </span>
+                                                    <% } else if (tx.transaction_type==='CREDIT' ) { %>
+                                                        <span
+                                                            class="inline-flex items-center gap-1 bg-purple-900/30 text-purple-400 px-3 py-1 rounded-full text-xs font-medium">
+                                                            <svg class="w-3 h-3" fill="currentColor"
+                                                                viewBox="0 0 20 20">
+                                                                <path
+                                                                    d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                                                            </svg>
+                                                            Premio
+                                                        </span>
+                                                        <% } else if (tx.transaction_type==='DEBIT' ) { %>
+                                                            <span
+                                                                class="inline-flex items-center gap-1 bg-red-900/30 text-red-400 px-3 py-1 rounded-full text-xs font-medium">
+                                                                <svg class="w-3 h-3" fill="currentColor"
+                                                                    viewBox="0 0 20 20">
+                                                                    <path fill-rule="evenodd"
+                                                                        d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-11a1 1 0 10-2 0v3.586l-1.293-1.293a1 1 0 00-1.414 1.414l3 3a1 1 0 001.414 0l3-3a1 1 0 00-1.414-1.414L11 10.586V7z"
+                                                                        clip-rule="evenodd" />
+                                                                </svg>
+                                                                Apuesta
+                                                            </span>
+                                                            <% } else { %>
+                                                                <span
+                                                                    class="inline-flex items-center gap-1 bg-gray-700 text-gray-300 px-3 py-1 rounded-full text-xs font-medium">
+                                                                    <%= tx.transaction_type %>
+                                                                </span>
+                                                                <% } %>
+                                            </td>
+                                            <td class="py-4 px-4 text-gray-300 text-sm">
+                                                <%= tx.description %>
+                                            </td>
+                                            <td class="py-4 px-4 text-right">
+                                                <% if (tx.transaction_type==='DEPOSIT' || tx.transaction_type==='CREDIT'
+                                                    ) { %>
+                                                    <span class="text-green-400 font-semibold">+$<%=
+                                                            tx.amount.toLocaleString() %></span>
+                                                    <% } else { %>
+                                                        <span class="text-red-400 font-semibold">-$<%=
+                                                                tx.amount.toLocaleString() %></span>
+                                                        <% } %>
+                                            </td>
+                                            <td class="py-4 px-4 text-right text-gray-400 text-sm">
+                                                $<%= tx.balance_after.toLocaleString() %>
+                                            </td>
+                                            <td class="py-4 px-4 text-right text-gray-400 text-sm">
+                                                <%= new Date(tx.created_at).toLocaleDateString('es-ES', { day: '2-digit'
+                                                    , month: 'short' , hour: '2-digit' , minute: '2-digit' }) %>
+                                            </td>
+                                        </tr>
+                                        <% }); %>
+                                </tbody>
+                            </table>
+                        </div>
+                        <% } %>
+            </div>
+        </div>
+</body>
+
+</html>
