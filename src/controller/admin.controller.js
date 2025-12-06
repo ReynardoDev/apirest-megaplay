@@ -230,6 +230,108 @@ export const getTransactions = async (req, res) => {
     }
 };
 
+// Vista de estadísticas (renderiza EJS)
+export const getStatsView = async (req, res) => {
+    try {
+        // Obtener período de tiempo (por defecto últimos 7 días)
+        const period = req.query.period || '7';
+        const daysAgo = parseInt(period);
+
+        // 1. KPIs Principales
+        const [kpis] = await pool.query(`
+            SELECT 
+                (SELECT COUNT(*) FROM players WHERE status = 'ACTIVE') as active_players,
+                (SELECT COUNT(*) FROM players WHERE DATE(created_at) >= DATE_SUB(CURDATE(), INTERVAL ? DAY)) as new_players,
+                (SELECT SUM(chips) FROM wallet) as total_chips_in_system,
+                (SELECT COUNT(DISTINCT player_id) FROM transactions WHERE DATE(created_at) >= DATE_SUB(CURDATE(), INTERVAL ? DAY)) as active_players_period
+        `, [daysAgo, daysAgo]);
+
+        // 2. Ingresos y Gastos del Período
+        const [revenue] = await pool.query(`
+            SELECT 
+                SUM(CASE WHEN transaction_type = 'DEPOSIT' THEN amount ELSE 0 END) as total_deposits,
+                SUM(CASE WHEN transaction_type = 'DEBIT' THEN amount ELSE 0 END) as total_debits,
+                SUM(CASE WHEN transaction_type = 'CREDIT' THEN amount ELSE 0 END) as total_credits
+            FROM transactions
+            WHERE DATE(created_at) >= DATE_SUB(CURDATE(), INTERVAL ? DAY)
+        `, [daysAgo]);
+
+        // 3. Datos para gráfico de línea (Ingresos diarios)
+        const [dailyRevenue] = await pool.query(`
+            SELECT 
+                DATE(created_at) as date,
+                SUM(CASE WHEN transaction_type = 'DEPOSIT' THEN amount ELSE 0 END) as deposits,
+                SUM(CASE WHEN transaction_type = 'DEBIT' THEN amount ELSE 0 END) as debits
+            FROM transactions
+            WHERE DATE(created_at) >= DATE_SUB(CURDATE(), INTERVAL ? DAY)
+            GROUP BY DATE(created_at)
+            ORDER BY date ASC
+        `, [daysAgo]);
+
+        // 4. Top 10 jugadores por volumen de apuestas
+        const [topPlayers] = await pool.query(`
+            SELECT 
+                p.username,
+                p.email,
+                SUM(t.amount) as total_wagered,
+                COUNT(t.id_transaction) as transaction_count
+            FROM transactions t
+            JOIN players p ON t.player_id = p.id_player
+            WHERE t.transaction_type = 'DEBIT'
+                AND DATE(t.created_at) >= DATE_SUB(CURDATE(), INTERVAL ? DAY)
+            GROUP BY p.id_player, p.username, p.email
+            ORDER BY total_wagered DESC
+            LIMIT 10
+        `, [daysAgo]);
+
+        // 5. Distribución de tipos de transacciones
+        const [transactionTypes] = await pool.query(`
+            SELECT 
+                transaction_type,
+                COUNT(*) as count,
+                SUM(amount) as total_amount
+            FROM transactions
+            WHERE DATE(created_at) >= DATE_SUB(CURDATE(), INTERVAL ? DAY)
+            GROUP BY transaction_type
+        `, [daysAgo]);
+
+        // 6. Distribución de jugadores por estado
+        const [playerStatus] = await pool.query(`
+            SELECT 
+                status,
+                COUNT(*) as count
+            FROM players
+            GROUP BY status
+        `);
+
+        // 7. Nuevos registros por día
+        const [newPlayersByDay] = await pool.query(`
+            SELECT 
+                DATE(created_at) as date,
+                COUNT(*) as new_players
+            FROM players
+            WHERE DATE(created_at) >= DATE_SUB(CURDATE(), INTERVAL ? DAY)
+            GROUP BY DATE(created_at)
+            ORDER BY date ASC
+        `, [daysAgo]);
+
+        res.render('admin/statistics', {
+            title: 'Estadísticas',
+            period: period,
+            kpis: kpis[0],
+            revenue: revenue[0],
+            dailyRevenue: dailyRevenue,
+            topPlayers: topPlayers,
+            transactionTypes: transactionTypes,
+            playerStatus: playerStatus,
+            newPlayersByDay: newPlayersByDay
+        });
+    } catch (error) {
+        console.error('Error al obtener estadísticas:', error);
+        res.status(500).send('Error al cargar estadísticas');
+    }
+};
+
 // Estadísticas de juegos
 export const getGameStats = async (req, res) => {
     try {

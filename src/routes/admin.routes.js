@@ -24,7 +24,10 @@ router.get('/transactions', adminController.getTransactionsView);
 // Transactions (API)
 router.get('/api/transactions', adminController.getTransactions);
 
-// Statistics
+// Statistics (View)
+router.get('/statistics', adminController.getStatsView);
+
+// Statistics (API)
 router.get('/stats/games', adminController.getGameStats);
 router.get('/stats/system', adminController.getSystemStats);
 

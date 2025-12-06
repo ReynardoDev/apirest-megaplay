@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>
+        <%= title %> - Admin Panel
+    </title>
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+</head>
+
+<body class="bg-gray-900 text-gray-100 font-sans antialiased">
+
+    <!-- Admin Navbar -->
+    <nav class="bg-gray-800 border-b border-red-700/30">
+        <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+            <div class="flex h-16 items-center justify-between">
+                <div class="flex items-center gap-3">
+                    <a href="/admin/dashboard" class="flex items-center gap-3">
+                        <div
+                            class="flex h-10 w-10 items-center justify-center rounded-lg bg-gradient-to-br from-red-600 to-red-800 shadow-lg">
+                            <svg class="h-6 w-6 text-white" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd"
+                                    d="M10 2a1 1 0 011 1v1.323l3.954 1.582 1.599-.8a1 1 0 01.894 1.79l-1.233.616 1.738 5.42a1 1 0 01-.285 1.05A3.989 3.989 0 0115 15a3.989 3.989 0 01-2.667-1.019 1 1 0 01-.285-1.05l1.715-5.349L11 6.477V16h2a1 1 0 110 2H7a1 1 0 110-2h2V6.477L6.237 7.582l1.715 5.349a1 1 0 01-.285 1.05A3.989 3.989 0 015 15a3.989 3.989 0 01-2.667-1.019 1 1 0 01-.285-1.05l1.738-5.42-1.233-.617a1 1 0 01.894-1.788l1.599.799L9 4.323V3a1 1 0 011-1z"
+                                    clip-rule="evenodd" />
+                            </svg>
+                        </div>
+                        <div>
+                            <h1 class="text-xl font-bold text-white">Admin Panel</h1>
+                            <p class="text-xs text-gray-400">Fair Play Casino</p>
+                        </div>
+                    </a>
+                </div>
+
+                <div class="flex items-center gap-4">
+                    <a href="/admin/dashboard"
+                        class="text-gray-400 hover:text-white transition-colors duration-200 text-sm">
+                        <i class="fa-solid fa-arrow-left mr-2"></i>Volver al Dashboard
+                    </a>
+                    <a href="/admin/logout"
+                        class="rounded-md bg-red-600/80 px-4 py-2 text-sm font-medium text-white hover:bg-red-600 transition-colors duration-200">
+                        Salir
+                    </a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="min-h-screen p-6">
+        <div class="max-w-7xl mx-auto">
+
+            <!-- Header with Period Filter -->
+            <div class="flex justify-between items-center mb-8">
+                <div>
+                    <h1 class="text-3xl font-extrabold text-white tracking-tight">
+                        <i class="fa-solid fa-chart-line text-red-500 mr-2"></i>
+                        Estadísticas
+                    </h1>
+                    <p class="text-gray-400 text-sm mt-1">Dashboard personalizable de métricas del casino</p>
+                </div>
+
+                <!-- Period Selector -->
+                <div class="flex gap-2">
+                    <a href="?period=1"
+                        class="px-4 py-2 rounded-lg <%= period === '1' ? 'bg-red-600 text-white' : 'bg-gray-800 text-gray-400 hover:bg-gray-700' %> transition-colors">
+                        Hoy
+                    </a>
+                    <a href="?period=7"
+                        class="px-4 py-2 rounded-lg <%= period === '7' ? 'bg-red-600 text-white' : 'bg-gray-800 text-gray-400 hover:bg-gray-700' %> transition-colors">
+                        7 días
+                    </a>
+                    <a href="?period=30"
+                        class="px-4 py-2 rounded-lg <%= period === '30' ? 'bg-red-600 text-white' : 'bg-gray-800 text-gray-400 hover:bg-gray-700' %> transition-colors">
+                        30 días
+                    </a>
+                    <a href="?period=90"
+                        class="px-4 py-2 rounded-lg <%= period === '90' ? 'bg-red-600 text-white' : 'bg-gray-800 text-gray-400 hover:bg-gray-700' %> transition-colors">
+                        90 días
+                    </a>
+                </div>
+            </div>
+
+            <!-- Widget Toggles -->
+            <div class="mb-6 bg-gray-800 border border-gray-700 rounded-xl p-4">
+                <p class="text-sm text-gray-400 mb-3">
+                    <i class="fa-solid fa-sliders mr-2"></i>Personalizar Dashboard
+                </p>
+                <div class="flex flex-wrap gap-2">
+                    <button onclick="toggleWidget('kpis')"
+                        class="px-3 py-1.5 bg-gray-700 hover:bg-gray-600 text-white text-sm rounded-lg transition-colors">
+                        <i class="fa-solid fa-chart-simple mr-1"></i> KPIs
+                    </button>
+                    <button onclick="toggleWidget('revenue')"
+                        class="px-3 py-1.5 bg-gray-700 hover:bg-gray-600 text-white text-sm rounded-lg transition-colors">
+                        <i class="fa-solid fa-dollar-sign mr-1"></i> Ingresos
+                    </button>
+                    <button onclick="toggleWidget('topPlayers')"
+                        class="px-3 py-1.5 bg-gray-700 hover:bg-gray-600 text-white text-sm rounded-lg transition-colors">
+                        <i class="fa-solid fa-trophy mr-1"></i> Top Jugadores
+                    </button>
+                    <button onclick="toggleWidget('transactions')"
+                        class="px-3 py-1.5 bg-gray-700 hover:bg-gray-600 text-white text-sm rounded-lg transition-colors">
+                        <i class="fa-solid fa-receipt mr-1"></i> Transacciones
+                    </button>
+                    <button onclick="toggleWidget('playerStatus')"
+                        class="px-3 py-1.5 bg-gray-700 hover:bg-gray-600 text-white text-sm rounded-lg transition-colors">
+                        <i class="fa-solid fa-users mr-1"></i> Estados
+                    </button>
+                    <button onclick="toggleWidget('newPlayers')"
+                        class="px-3 py-1.5 bg-gray-700 hover:bg-gray-600 text-white text-sm rounded-lg transition-colors">
+                        <i class="fa-solid fa-user-plus mr-1"></i> Registros
+                    </button>
+                </div>
+            </div>
+
+            <!-- KPIs Cards -->
+            <div id="widget-kpis" class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+                <div class="bg-gray-800 border border-gray-700 rounded-xl p-6">
+                    <div class="flex items-center justify-between mb-2">
+                        <p class="text-gray-400 text-sm">Jugadores Activos</p>
+                        <i class="fa-solid fa-users text-green-400"></i>
+                    </div>
+                    <p class="text-white text-3xl font-bold">
+                        <%= kpis.active_players %>
+                    </p>
+                    <p class="text-xs text-gray-500 mt-1">Total en sistema</p>
+                </div>
+
+                <div class="bg-gray-800 border border-gray-700 rounded-xl p-6">
+                    <div class="flex items-center justify-between mb-2">
+                        <p class="text-gray-400 text-sm">Nuevos Jugadores</p>
+                        <i class="fa-solid fa-user-plus text-blue-400"></i>
+                    </div>
+                    <p class="text-white text-3xl font-bold">
+                        <%= kpis.new_players %>
+                    </p>
+                    <p class="text-xs text-gray-500 mt-1">Últimos <%= period %> días</p>
+                </div>
+
+                <div class="bg-gray-800 border border-gray-700 rounded-xl p-6">
+                    <div class="flex items-center justify-between mb-2">
+                        <p class="text-gray-400 text-sm">Chips en Sistema</p>
+                        <i class="fa-solid fa-coins text-amber-400"></i>
+                    </div>
+                    <p class="text-white text-3xl font-bold">$<%= (kpis.total_chips_in_system || 0).toLocaleString() %>
+                    </p>
+                    <p class="text-xs text-gray-500 mt-1">Balance total</p>
+                </div>
+
+                <div class="bg-gray-800 border border-gray-700 rounded-xl p-6">
+                    <div class="flex items-center justify-between mb-2">
+                        <p class="text-gray-400 text-sm">Jugadores Activos</p>
+                        <i class="fa-solid fa-chart-line text-purple-400"></i>
+                    </div>
+                    <p class="text-white text-3xl font-bold">
+                        <%= kpis.active_players_period %>
+                    </p>
+                    <p class="text-xs text-gray-500 mt-1">Con transacciones</p>
+                </div>
+            </div>
+
+            <!-- Revenue Chart -->
+            <div id="widget-revenue" class="bg-gray-800 border border-gray-700 rounded-xl p-6 mb-8">
+                <h3 class="text-xl font-bold text-white mb-4">
+                    <i class="fa-solid fa-chart-area text-red-500 mr-2"></i>
+                    Ingresos vs Débitos
+                </h3>
+                <canvas id="revenueChart" height="80"></canvas>
+            </div>
+
+            <!-- Charts Grid -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+                <!-- Top Players Chart -->
+                <div id="widget-topPlayers" class="bg-gray-800 border border-gray-700 rounded-xl p-6">
+                    <h3 class="text-xl font-bold text-white mb-4">
+                        <i class="fa-solid fa-trophy text-amber-500 mr-2"></i>
+                        Top 10 Jugadores
+                    </h3>
+                    <canvas id="topPlayersChart"></canvas>
+                </div>
+
+                <!-- Transaction Types Chart -->
+                <div id="widget-transactions" class="bg-gray-800 border border-gray-700 rounded-xl p-6">
+                    <h3 class="text-xl font-bold text-white mb-4">
+                        <i class="fa-solid fa-chart-pie text-blue-500 mr-2"></i>
+                        Distribución de Transacciones
+                    </h3>
+                    <canvas id="transactionTypesChart"></canvas>
+                </div>
+
+                <!-- Player Status Chart -->
+                <div id="widget-playerStatus" class="bg-gray-800 border border-gray-700 rounded-xl p-6">
+                    <h3 class="text-xl font-bold text-white mb-4">
+                        <i class="fa-solid fa-users text-green-500 mr-2"></i>
+                        Estados de Jugadores
+                    </h3>
+                    <canvas id="playerStatusChart"></canvas>
+                </div>
+
+                <!-- New Players Chart -->
+                <div id="widget-newPlayers" class="bg-gray-800 border border-gray-700 rounded-xl p-6">
+                    <h3 class="text-xl font-bold text-white mb-4">
+                        <i class="fa-solid fa-user-plus text-purple-500 mr-2"></i>
+                        Nuevos Registros por Día
+                    </h3>
+                    <canvas id="newPlayersChart"></canvas>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        // Widget Toggle Function
+        function toggleWidget(widgetId) {
+            const widget = document.getElementById('widget-' + widgetId);
+            if (widget) {
+                widget.style.display = widget.style.display === 'none' ? '' : 'none';
+                localStorage.setItem('widget-' + widgetId, widget.style.display === 'none' ? 'hidden' : 'visible');
+            }
+        }
+
+        // Load widget preferences
+        document.addEventListener('DOMContentLoaded', function () {
+            ['kpis', 'revenue', 'topPlayers', 'transactions', 'playerStatus', 'newPlayers'].forEach(widgetId => {
+                const pref = localStorage.getItem('widget-' + widgetId);
+                if (pref === 'hidden') {
+                    const widget = document.getElementById('widget-' + widgetId);
+                    if (widget) widget.style.display = 'none';
+                }
+            });
+        });
+
+        // Chart.js Default Config
+        Chart.defaults.color = '#9ca3af';
+        Chart.defaults.borderColor = '#374151';
+
+        // Prepare data
+        const dailyRevenueData = <%= JSON.stringify(dailyRevenue) %>;
+        const topPlayersData = <%= JSON.stringify(topPlayers) %>;
+        const transactionTypesData = <%= JSON.stringify(transactionTypes) %>;
+        const playerStatusData = <%= JSON.stringify(playerStatus) %>;
+        const newPlayersData = <%= JSON.stringify(newPlayersByDay) %>;
+
+        // 1. Revenue Chart
+        new Chart(document.getElementById('revenueChart'), {
+            type: 'line',
+            data: {
+                labels: dailyRevenueData.length > 0 ? dailyRevenueData.map(d => new Date(d.date).toLocaleDateString('es-ES', { month: 'short', day: 'numeric' })) : ['Sin datos'],
+                datasets: [{
+                    label: 'Depósitos',
+                    data: dailyRevenueData.length > 0 ? dailyRevenueData.map(d => parseFloat(d.deposits)) : [0],
+                    borderColor: '#10b981',
+                    backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                    fill: true,
+                    tension: 0.4
+                }, {
+                    label: 'Débitos',
+                    data: dailyRevenueData.length > 0 ? dailyRevenueData.map(d => parseFloat(d.debits)) : [0],
+                    borderColor: '#ef4444',
+                    backgroundColor: 'rgba(239, 68, 68, 0.1)',
+                    fill: true,
+                    tension: 0.4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: true,
+                plugins: { legend: { display: true, position: 'top' } },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: { callback: value => '$' + value.toLocaleString() }
+                    }
+                }
+            }
+        });
+
+        // 2. Top Players Chart
+        new Chart(document.getElementById('topPlayersChart'), {
+            type: 'bar',
+            data: {
+                labels: topPlayersData.length > 0 ? topPlayersData.map(p => p.username) : ['Sin datos'],
+                datasets: [{
+                    label: 'Total Apostado',
+                    data: topPlayersData.length > 0 ? topPlayersData.map(p => parseFloat(p.total_wagered)) : [0],
+                    backgroundColor: 'rgba(251, 191, 36, 0.8)',
+                    borderColor: '#f59e0b',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: true,
+                indexAxis: 'y',
+                plugins: { legend: { display: false } },
+                scales: {
+                    x: {
+                        beginAtZero: true,
+                        ticks: { callback: value => '$' + value.toLocaleString() }
+                    }
+                }
+            }
+        });
+
+        // 3. Transaction Types Chart
+        new Chart(document.getElementById('transactionTypesChart'), {
+            type: 'doughnut',
+            data: {
+                labels: transactionTypesData.length > 0 ? transactionTypesData.map(t => t.transaction_type) : ['Sin datos'],
+                datasets: [{
+                    data: transactionTypesData.length > 0 ? transactionTypesData.map(t => t.count) : [1],
+                    backgroundColor: ['rgba(16, 185, 129, 0.8)', 'rgba(239, 68, 68, 0.8)', 'rgba(251, 191, 36, 0.8)', 'rgba(59, 130, 246, 0.8)'],
+                    borderColor: ['#10b981', '#ef4444', '#f59e0b', '#3b82f6'],
+                    borderWidth: 2
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: true,
+                plugins: { legend: { position: 'bottom' } }
+            }
+        });
+
+        // 4. Player Status Chart
+        new Chart(document.getElementById('playerStatusChart'), {
+            type: 'pie',
+            data: {
+                labels: playerStatusData.length > 0 ? playerStatusData.map(s => s.status) : ['Sin datos'],
+                datasets: [{
+                    data: playerStatusData.length > 0 ? playerStatusData.map(s => s.count) : [1],
+                    backgroundColor: ['rgba(16, 185, 129, 0.8)', 'rgba(251, 191, 36, 0.8)', 'rgba(239, 68, 68, 0.8)', 'rgba(59, 130, 246, 0.8)'],
+                    borderColor: ['#10b981', '#f59e0b', '#ef4444', '#3b82f6'],
+                    borderWidth: 2
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: true,
+                plugins: { legend: { position: 'bottom' } }
+            }
+        });
+
+        // 5. New Players Chart
+        new Chart(document.getElementById('newPlayersChart'), {
+            type: 'bar',
+            data: {
+                labels: newPlayersData.length > 0 ? newPlayersData.map(d => new Date(d.date).toLocaleDateString('es-ES', { month: 'short', day: 'numeric' })) : ['Sin datos'],
+                datasets: [{
+                    label: 'Nuevos Registros',
+                    data: newPlayersData.length > 0 ? newPlayersData.map(d => d.new_players) : [0],
+                    backgroundColor: 'rgba(139, 92, 246, 0.8)',
+                    borderColor: '#8b5cf6',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: true,
+                plugins: { legend: { display: false } },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: { stepSize: 1 }
+                    }
+                }
+            }
+        });
+    </script>
+</body>
+
+</html>
