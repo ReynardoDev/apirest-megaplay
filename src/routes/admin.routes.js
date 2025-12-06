@@ -18,8 +18,11 @@ router.get('/api/users', adminController.getUsers);
 router.get('/users/:id', adminController.getUserDetails);
 router.put('/users/:id', adminController.updateUser);
 
-// Transactions
-router.get('/transactions', adminController.getTransactions);
+// Transactions (View)
+router.get('/transactions', adminController.getTransactionsView);
+
+// Transactions (API)
+router.get('/api/transactions', adminController.getTransactions);
 
 // Statistics
 router.get('/stats/games', adminController.getGameStats);

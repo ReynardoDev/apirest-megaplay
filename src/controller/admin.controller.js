@@ -161,6 +161,49 @@ export const updateUser = async (req, res) => {
     }
 };
 
+// Vista de transacciones (renderiza EJS)
+export const getTransactionsView = async (req, res) => {
+    try {
+        const [transactions] = await pool.query(`
+            SELECT 
+                t.id_transaction,
+                t.player_id,
+                t.transaction_type,
+                t.amount,
+                t.balance_before,
+                t.balance_after,
+                t.description,
+                t.created_at,
+                p.username,
+                p.email
+            FROM transactions t
+            LEFT JOIN players p ON t.player_id = p.id_player
+            ORDER BY t.created_at DESC
+            LIMIT 500
+        `);
+
+        // Calcular estadísticas del día
+        const [dailyStats] = await pool.query(`
+            SELECT 
+                COUNT(*) as total_transactions,
+                SUM(CASE WHEN transaction_type = 'DEPOSIT' THEN amount ELSE 0 END) as total_deposits,
+                SUM(CASE WHEN transaction_type = 'DEBIT' THEN amount ELSE 0 END) as total_debits,
+                SUM(CASE WHEN transaction_type = 'CREDIT' THEN amount ELSE 0 END) as total_credits
+            FROM transactions
+            WHERE DATE(created_at) = CURDATE()
+        `);
+
+        res.render('admin/transactions', {
+            title: 'Transacciones',
+            transactions: transactions,
+            stats: dailyStats[0]
+        });
+    } catch (error) {
+        console.error('Error al obtener transacciones:', error);
+        res.status(500).send('Error al cargar transacciones');
+    }
+};
+
 // Obtener transacciones
 export const getTransactions = async (req, res) => {
     try {
