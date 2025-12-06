@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>
+        <%= title %> - Fair Play Casino
+    </title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @keyframes gradient {
+            0% {
+                background-position: 0% 50%;
+            }
+
+            50% {
+                background-position: 100% 50%;
+            }
+
+            100% {
+                background-position: 0% 50%;
+            }
+        }
+
+        .animate-gradient {
+            background-size: 200% 200%;
+            animation: gradient 15s ease infinite;
+        }
+    </style>
+</head>
+
+<body
+    class="min-h-screen bg-gradient-to-br from-gray-900 via-red-900 to-gray-900 animate-gradient flex items-center justify-center p-4">
+
+    <div class="w-full max-w-md">
+        <!-- Logo / Header -->
+        <div class="text-center mb-8">
+            <div
+                class="inline-flex items-center justify-center w-20 h-20 rounded-full bg-gradient-to-br from-red-600 to-red-800 shadow-2xl shadow-red-500/50 mb-4">
+                <svg class="w-12 h-12 text-white" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd"
+                        d="M10 2a1 1 0 011 1v1.323l3.954 1.582 1.599-.8a1 1 0 01.894 1.79l-1.233.616 1.738 5.42a1 1 0 01-.285 1.05A3.989 3.989 0 0115 15a3.989 3.989 0 01-2.667-1.019 1 1 0 01-.285-1.05l1.715-5.349L11 6.477V16h2a1 1 0 110 2H7a1 1 0 110-2h2V6.477L6.237 7.582l1.715 5.349a1 1 0 01-.285 1.05A3.989 3.989 0 015 15a3.989 3.989 0 01-2.667-1.019 1 1 0 01-.285-1.05l1.738-5.42-1.233-.617a1 1 0 01.894-1.788l1.599.799L9 4.323V3a1 1 0 011-1z"
+                        clip-rule="evenodd" />
+                </svg>
+            </div>
+            <h1 class="text-4xl font-bold text-white mb-2">Admin Panel</h1>
+            <p class="text-red-300">Fair Play Casino</p>
+        </div>
+
+        <!-- Login Card -->
+        <div class="bg-gray-800/50 backdrop-blur-sm border border-red-700/30 rounded-2xl p-8 shadow-2xl">
+            <h2 class="text-2xl font-bold text-white mb-6 text-center">Iniciar Sesión</h2>
+
+            <!-- Alert Message -->
+            <% if (message) { %>
+                <div class="mb-6 bg-red-900/50 border border-red-700 rounded-lg p-4 flex items-start gap-3">
+                    <svg class="w-5 h-5 text-red-400 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd"
+                            d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
+                            clip-rule="evenodd" />
+                    </svg>
+                    <span class="text-sm text-red-300">
+                        <%= message %>
+                    </span>
+                </div>
+                <% } %>
+
+                    <!-- Login Form -->
+                    <form id="loginForm">
+                        <!-- Username -->
+                        <div class="mb-4">
+                            <label for="username" class="block text-sm font-medium text-gray-300 mb-2">
+                                Usuario
+                            </label>
+                            <input type="text" id="username" name="username" required
+                                class="w-full px-4 py-3 bg-gray-900 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all"
+                                placeholder="admin">
+                        </div>
+
+                        <!-- Password -->
+                        <div class="mb-6">
+                            <label for="password" class="block text-sm font-medium text-gray-300 mb-2">
+                                Contraseña
+                            </label>
+                            <input type="password" id="password" name="password" required
+                                class="w-full px-4 py-3 bg-gray-900 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all"
+                                placeholder="••••••••">
+                        </div>
+
+                        <!-- Submit Button -->
+                        <button type="submit" id="submitBtn"
+                            class="w-full bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white font-bold py-3 px-6 rounded-lg transition-all duration-300 transform hover:scale-105 hover:shadow-xl hover:shadow-red-500/50 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
+                            </svg>
+                            <span id="btnText">Iniciar Sesión</span>
+                        </button>
+                    </form>
+
+                    <!-- Security Notice -->
+                    <div
+                        class="mt-6 bg-yellow-900/20 border border-yellow-700/30 rounded-lg p-4 flex items-start gap-3">
+                        <svg class="w-5 h-5 text-yellow-400 flex-shrink-0 mt-0.5" fill="currentColor"
+                            viewBox="0 0 20 20">
+                            <path fill-rule="evenodd"
+                                d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z"
+                                clip-rule="evenodd" />
+                        </svg>
+                        <div>
+                            <p class="text-sm text-yellow-300 font-medium">Acceso Restringido</p>
+                            <p class="text-xs text-yellow-400/70 mt-1">Solo personal autorizado puede acceder a este
+                                panel.</p>
+                        </div>
+                    </div>
+        </div>
+
+        <!-- Back to Site -->
+        <div class="mt-6 text-center">
+            <a href="/"
+                class="text-gray-400 hover:text-white transition-colors duration-200 text-sm flex items-center justify-center gap-2">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                </svg>
+                Volver al sitio
+            </a>
+        </div>
+    </div>
+
+    <script>
+        const form = document.getElementById('loginForm');
+        const submitBtn = document.getElementById('submitBtn');
+        const btnText = document.getElementById('btnText');
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+
+            // Disable button
+            submitBtn.disabled = true;
+            btnText.textContent = 'Verificando...';
+
+            try {
+                const response = await fetch('/admin/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    credentials: 'include',
+                    body: JSON.stringify({ username, password })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    btnText.textContent = '¡Acceso concedido!';
+                    // Redirect to dashboard
+                    window.location.href = data.redirect || '/admin/dashboard';
+                } else {
+                    // Show error
+                    alert(data.message || 'Error al iniciar sesión');
+                    submitBtn.disabled = false;
+                    btnText.textContent = 'Iniciar Sesión';
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Error de conexión. Intenta nuevamente.');
+                submitBtn.disabled = false;
+                btnText.textContent = 'Iniciar Sesión';
+            }
+        });
+    </script>
+</body>
+
+</html>

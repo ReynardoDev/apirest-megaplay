@@ -13,6 +13,8 @@ import homeRoutes from "./routes/home.routes.js";
 import loginRoutes from "./routes/login.routes.js";
 import playerCrudRoutes from "./routes/player.crud.routes.js";
 import registerRoutes from "./routes/register.routes.js";
+import adminLoginRoutes from "./routes/admin.login.routes.js";
+import adminRoutes from "./routes/admin.routes.js";
 
 // Middlewares
 import { jsonSyntaxErrorHandler } from "./middlewares/errorHandler.js";
@@ -115,9 +117,16 @@ app.use('/api', loginRoutes); // El login debe ser público
 app.use('/api', gameRoutes);  // Rutas de juego
 app.use('/register', registerRoutes); // Registro público
 
-// Rutas Protegidas (Requieren token)
-// 👇 AQUÍ APLICAMOS EL MIDDLEWARE SOLO AL CRUD
-app.use('/crud', verifyToken, playerCrudRoutes);
+// Rutas de Admin (Login público)
+app.use('/admin', adminLoginRoutes);
+
+// Rutas de Admin (Protegidas - requieren admin_token)
+app.use('/admin', adminRoutes);
+
+// Rutas Protegidas (Requieren token de jugador O admin)
+// 👇 Permite acceso tanto a jugadores como a admins
+import { verifyPlayerOrAdmin } from './middlewares/verifyPlayerOrAdmin.middleware.js';
+app.use('/crud', verifyPlayerOrAdmin, playerCrudRoutes);
 app.use('/api', walletRoutes); // Quizás quieras proteger la billetera también
 
 // --- MANEJADORES DE ERROR (SIEMPRE AL FINAL) ---

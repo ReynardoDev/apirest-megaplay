@@ -5,7 +5,17 @@ import bcrypt from 'bcryptjs';
 // --- LISTAR (GET) ---
 export const getPlayerList = async (req, res) => {
     try {
-        const [result] = await pool.query("SELECT * FROM players");
+        const [result] = await pool.query(`
+            SELECT 
+                id_player,
+                username as user,
+                email,
+                kyc_verified,
+                status,
+                created_at
+            FROM players
+            ORDER BY created_at DESC
+        `);
         res.render("player/index", {
             var_title: "CRUD Players",
             items: result
