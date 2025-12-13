@@ -78,13 +78,13 @@ export const getPlayerLogin = async (req, res) => {
             maxAge: maxAgeMs
         });
 
-        // 5. Respuesta
-        const { password: _, ...playerWithoutPassword } = player;
+        // 5. Respuesta (eliminamos el password_hash por seguridad)
+        const { password_hash, ...playerWithoutPassword } = player;
 
         res.status(200).json({
             message: "Login exitoso",
             player: playerWithoutPassword,
-            // token: token // No es estrictamente necesario enviarlo si ya va en cookie, pero ayuda al debug
+            token: token // Útil para debugging y para apps móviles/SPA
         });
 
     } catch (error) {

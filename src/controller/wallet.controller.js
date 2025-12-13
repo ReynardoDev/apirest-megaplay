@@ -234,3 +234,206 @@ export const purchaseView = (req, res) => {
     // user ya está disponible en res.locals automáticamente
   });
 };
+
+// Procesar apuesta (descontar fichas)
+export const placeBet = async (req, res) => {
+  const connection = await pool.getConnection();
+
+  try {
+    const { amount } = req.body;
+    const id_player = res.locals.user?.id;
+
+    // Validaciones
+    if (!id_player) {
+      await connection.release();
+      return res.status(401).json({
+        success: false,
+        message: "Debes iniciar sesión"
+      });
+    }
+
+    const betAmount = parseFloat(amount);
+    if (!betAmount || betAmount <= 0) {
+      await connection.release();
+      return res.status(400).json({
+        success: false,
+        message: "El monto de apuesta debe ser mayor a 0"
+      });
+    }
+
+    // Iniciar transacción
+    await connection.beginTransaction();
+
+    // Obtener saldo actual
+    const [walletRows] = await connection.query(
+      "SELECT chips FROM wallet WHERE id_player = ?",
+      [id_player]
+    );
+
+    if (walletRows.length === 0) {
+      await connection.rollback();
+      await connection.release();
+      return res.status(404).json({
+        success: false,
+        message: "Wallet no encontrado"
+      });
+    }
+
+    const currentBalance = parseFloat(walletRows[0].chips);
+
+    // Verificar saldo suficiente
+    if (currentBalance < betAmount) {
+      await connection.rollback();
+      await connection.release();
+      return res.status(400).json({
+        success: false,
+        message: "Saldo insuficiente",
+        current_balance: currentBalance,
+        required: betAmount
+      });
+    }
+
+    const newBalance = currentBalance - betAmount;
+
+    // Actualizar saldo
+    await connection.query(
+      "UPDATE wallet SET chips = ?, total_wagered = total_wagered + ?, updated_at = NOW() WHERE id_player = ?",
+      [newBalance, betAmount, id_player]
+    );
+
+    // Registrar transacción
+    await connection.query(
+      `INSERT INTO transactions 
+        (player_id, transaction_type, amount, balance_before, balance_after, reference_type, description, created_at) 
+      VALUES (?, ?, ?, ?, ?, ?, ?, NOW())`,
+      [
+        id_player,
+        'BET',
+        betAmount,
+        currentBalance,
+        newBalance,
+        'SLOT_GAME',
+        'Apuesta en Black Diamond Slot'
+      ]
+    );
+
+    await connection.commit();
+
+    console.log(`🎰 Apuesta procesada - Player: ${id_player}, Monto: ${betAmount}, Balance: ${currentBalance} → ${newBalance}`);
+
+    res.json({
+      success: true,
+      message: "Apuesta procesada",
+      data: {
+        bet_amount: betAmount,
+        previous_balance: currentBalance,
+        new_balance: newBalance
+      }
+    });
+
+  } catch (error) {
+    await connection.rollback();
+    console.error("❌ Error en apuesta:", error);
+    res.status(500).json({
+      success: false,
+      message: "Error al procesar apuesta"
+    });
+  } finally {
+    connection.release();
+  }
+};
+
+// Procesar ganancia (acreditar fichas)
+export const processWin = async (req, res) => {
+  const connection = await pool.getConnection();
+
+  try {
+    const { amount } = req.body;
+    const id_player = res.locals.user?.id;
+
+    // Validaciones
+    if (!id_player) {
+      await connection.release();
+      return res.status(401).json({
+        success: false,
+        message: "Debes iniciar sesión"
+      });
+    }
+
+    const winAmount = parseFloat(amount);
+    if (!winAmount || winAmount <= 0) {
+      await connection.release();
+      return res.status(400).json({
+        success: false,
+        message: "El monto de ganancia debe ser mayor a 0"
+      });
+    }
+
+    // Iniciar transacción
+    await connection.beginTransaction();
+
+    // Obtener saldo actual
+    const [walletRows] = await connection.query(
+      "SELECT chips FROM wallet WHERE id_player = ?",
+      [id_player]
+    );
+
+    if (walletRows.length === 0) {
+      await connection.rollback();
+      await connection.release();
+      return res.status(404).json({
+        success: false,
+        message: "Wallet no encontrado"
+      });
+    }
+
+    const currentBalance = parseFloat(walletRows[0].chips);
+    const newBalance = currentBalance + winAmount;
+
+    // Actualizar saldo
+    await connection.query(
+      "UPDATE wallet SET chips = ?, total_won = total_won + ?, updated_at = NOW() WHERE id_player = ?",
+      [newBalance, winAmount, id_player]
+    );
+
+    // Registrar transacción
+    await connection.query(
+      `INSERT INTO transactions 
+        (player_id, transaction_type, amount, balance_before, balance_after, reference_type, description, created_at) 
+      VALUES (?, ?, ?, ?, ?, ?, ?, NOW())`,
+      [
+        id_player,
+        'WIN',
+        winAmount,
+        currentBalance,
+        newBalance,
+        'SLOT_GAME',
+        'Ganancia en Black Diamond Slot'
+      ]
+    );
+
+    await connection.commit();
+
+    console.log(`💰 Ganancia procesada - Player: ${id_player}, Monto: ${winAmount}, Balance: ${currentBalance} → ${newBalance}`);
+
+    res.json({
+      success: true,
+      message: "Ganancia procesada",
+      data: {
+        win_amount: winAmount,
+        previous_balance: currentBalance,
+        new_balance: newBalance
+      }
+    });
+
+  } catch (error) {
+    await connection.rollback();
+    console.error("❌ Error en ganancia:", error);
+    res.status(500).json({
+      success: false,
+      message: "Error al procesar ganancia"
+    });
+  } finally {
+    connection.release();
+  }
+};
