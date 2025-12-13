@@ -9,6 +9,7 @@ import jwt from 'jsonwebtoken'; // 1. IMPORTAR JWT
 import indexRoutes from "./routes/index.routes.js";
 import walletRoutes from "./routes/wallet.routes.js";
 import gameRoutes from "./routes/game.routes.js";
+import raceBetRoutes from "./routes/raceBet.routes.js";
 import homeRoutes from "./routes/home.routes.js";
 import loginRoutes from "./routes/login.routes.js";
 import playerCrudRoutes from "./routes/player.crud.routes.js";
@@ -115,6 +116,7 @@ app.use(homeRoutes);
 // Rutas Públicas (No requieren token)
 app.use('/api', loginRoutes); // El login debe ser público
 app.use('/api', gameRoutes);  // Rutas de juego
+app.use('/api', raceBetRoutes); // Rutas de apuestas de carreras
 app.use('/register', registerRoutes); // Registro público
 
 // Rutas de Admin (Login público)

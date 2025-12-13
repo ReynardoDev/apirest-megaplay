@@ -72,8 +72,22 @@ export const playerCreate = async (req, res) => {
             [result.insertId, chips_bono]
         );
 
-        // 4. ÉXITO: Redirigir a la lista principal con mensaje
-        res.redirect('/crud?message=Jugador creado exitosamente');
+        // 4. ÉXITO: Redirigir al login con mensaje de éxito
+        // Si viene de /register (público), redirigir al login
+        // Si viene de /crud (admin), redirigir al CRUD
+        const isPublicRegistration = req.path === '/';
+
+        if (isPublicRegistration) {
+            // Registro público - redirigir al login
+            res.render("player/create", {
+                error: null,
+                item: {},
+                message: `¡Cuenta creada exitosamente! Has recibido ${chips_bono} chips de bono. Ahora puedes iniciar sesión.`
+            });
+        } else {
+            // Registro desde admin - redirigir al CRUD
+            res.redirect('/crud?message=Jugador creado exitosamente');
+        }
 
     } catch (error) {
         console.error("Error en playerCreate:", error);
