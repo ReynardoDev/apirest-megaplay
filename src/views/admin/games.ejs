@@ -1,0 +1,597 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestión de Juegos - Admin Panel</title>
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        /* Modal backdrop */
+        .modal-backdrop {
+            background-color: rgba(0, 0, 0, 0.75);
+        }
+
+        /* Custom scrollbar */
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: #1f2937;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #4b5563;
+            border-radius: 4px;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: #6b7280;
+        }
+    </style>
+</head>
+
+<body class="bg-gray-900 text-gray-100 font-sans antialiased">
+
+    <!-- Admin Navbar -->
+    <nav class="bg-gray-800 border-b border-red-700/30">
+        <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+            <div class="flex h-16 items-center justify-between">
+                <!-- Logo -->
+                <div class="flex items-center gap-3">
+                    <a href="/admin/dashboard" class="flex items-center gap-3">
+                        <div
+                            class="flex h-10 w-10 items-center justify-center rounded-lg bg-gradient-to-br from-red-600 to-red-800 shadow-lg">
+                            <svg class="h-6 w-6 text-white" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd"
+                                    d="M10 2a1 1 0 011 1v1.323l3.954 1.582 1.599-.8a1 1 0 01.894 1.79l-1.233.616 1.738 5.42a1 1 0 01-.285 1.05A3.989 3.989 0 0115 15a3.989 3.989 0 01-2.667-1.019 1 1 0 01-.285-1.05l1.715-5.349L11 6.477V16h2a1 1 0 110 2H7a1 1 0 110-2h2V6.477L6.237 7.582l1.715 5.349a1 1 0 01-.285 1.05A3.989 3.989 0 015 15a3.989 3.989 0 01-2.667-1.019 1 1 0 01-.285-1.05l1.738-5.42-1.233-.617a1 1 0 01.894-1.788l1.599.799L9 4.323V3a1 1 0 011-1z"
+                                    clip-rule="evenodd" />
+                            </svg>
+                        </div>
+                        <div>
+                            <h1 class="text-xl font-bold text-white">Admin Panel</h1>
+                            <p class="text-xs text-gray-400">Fair Play Casino</p>
+                        </div>
+                    </a>
+                </div>
+
+                <!-- Admin Info -->
+                <div class="flex items-center gap-4">
+                    <a href="/admin/dashboard"
+                        class="text-gray-400 hover:text-white transition-colors duration-200 text-sm">
+                        <i class="fa-solid fa-arrow-left mr-2"></i>Volver al Dashboard
+                    </a>
+                    <a href="/admin/logout"
+                        class="rounded-md bg-red-600/80 px-4 py-2 text-sm font-medium text-white hover:bg-red-600 transition-colors duration-200">
+                        Salir
+                    </a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="min-h-screen p-6">
+        <div class="max-w-7xl mx-auto">
+
+            <div class="flex flex-col md:flex-row justify-between items-center mb-8 gap-4">
+                <div>
+                    <h1 class="text-3xl font-extrabold text-white tracking-tight">
+                        <i class="fa-solid fa-gamepad text-red-500 mr-2"></i>
+                        Gestión de Juegos
+                    </h1>
+                    <p class="text-gray-400 text-sm mt-1">Administra el catálogo de juegos del casino</p>
+                </div>
+
+                <button onclick="openModal()"
+                    class="inline-flex items-center px-5 py-2.5 bg-red-600 hover:bg-red-700 text-white font-medium rounded-lg shadow-lg shadow-red-500/30 transition-all duration-200 transform hover:-translate-y-0.5">
+                    <i class="fa-solid fa-plus mr-2"></i> Nuevo Juego
+                </button>
+            </div>
+
+            <!-- Filters -->
+            <div class="bg-gray-800 rounded-xl p-4 mb-6 border border-gray-700">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-400 mb-2">Tipo de Juego</label>
+                        <select id="filterType" onchange="loadGames()"
+                            class="w-full bg-gray-700 border border-gray-600 text-white rounded-lg px-4 py-2 focus:ring-2 focus:ring-red-500 focus:border-transparent">
+                            <option value="ALL">Todos</option>
+                            <option value="SLOT">Slots</option>
+                            <option value="ROULETTE">Ruleta</option>
+                            <option value="BLACKJACK">Blackjack</option>
+                            <option value="POKER">Poker</option>
+                            <option value="BACCARAT">Baccarat</option>
+                            <option value="OTHER">Otros</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-400 mb-2">Estado</label>
+                        <select id="filterStatus" onchange="loadGames()"
+                            class="w-full bg-gray-700 border border-gray-600 text-white rounded-lg px-4 py-2 focus:ring-2 focus:ring-red-500 focus:border-transparent">
+                            <option value="ALL">Todos</option>
+                            <option value="ACTIVE">Activo</option>
+                            <option value="INACTIVE">Inactivo</option>
+                            <option value="MAINTENANCE">Mantenimiento</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-400 mb-2">Buscar</label>
+                        <input type="text" id="searchInput" onkeyup="loadGames()" placeholder="Nombre o slug..."
+                            class="w-full bg-gray-700 border border-gray-600 text-white rounded-lg px-4 py-2 focus:ring-2 focus:ring-red-500 focus:border-transparent">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Games Table -->
+            <div class="bg-gray-800 rounded-xl shadow-2xl overflow-hidden border border-gray-700">
+                <div class="overflow-x-auto custom-scrollbar">
+                    <table class="w-full text-left">
+                        <thead class="bg-gray-900/50">
+                            <tr>
+                                <th class="px-6 py-4 text-xs font-bold text-gray-400 uppercase tracking-wider">ID</th>
+                                <th class="px-6 py-4 text-xs font-bold text-gray-400 uppercase tracking-wider">Nombre</th>
+                                <th class="px-6 py-4 text-xs font-bold text-gray-400 uppercase tracking-wider">Tipo</th>
+                                <th class="px-6 py-4 text-xs font-bold text-gray-400 uppercase tracking-wider">Proveedor</th>
+                                <th class="px-6 py-4 text-xs font-bold text-gray-400 uppercase tracking-wider text-center">Apuestas</th>
+                                <th class="px-6 py-4 text-xs font-bold text-gray-400 uppercase tracking-wider text-center">RTP</th>
+                                <th class="px-6 py-4 text-xs font-bold text-gray-400 uppercase tracking-wider text-center">Estado</th>
+                                <th class="px-6 py-4 text-xs font-bold text-gray-400 uppercase tracking-wider text-center">Destacado</th>
+                                <th class="px-6 py-4 text-xs font-bold text-gray-400 uppercase tracking-wider text-center">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="gamesTableBody" class="divide-y divide-gray-700">
+                            <!-- Loaded via JavaScript -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal for Create/Edit Game -->
+    <div id="gameModal" class="hidden fixed inset-0 z-50 overflow-y-auto">
+        <div class="flex items-center justify-center min-h-screen px-4">
+            <div class="modal-backdrop fixed inset-0" onclick="closeModal()"></div>
+            
+            <div class="bg-gray-800 rounded-xl shadow-2xl border border-gray-700 z-10 w-full max-w-2xl max-h-[90vh] overflow-y-auto custom-scrollbar">
+                <div class="p-6">
+                    <div class="flex justify-between items-center mb-6">
+                        <h2 id="modalTitle" class="text-2xl font-bold text-white">Nuevo Juego</h2>
+                        <button onclick="closeModal()" class="text-gray-400 hover:text-white">
+                            <i class="fa-solid fa-xmark text-2xl"></i>
+                        </button>
+                    </div>
+
+                    <form id="gameForm" onsubmit="saveGame(event)">
+                        <input type="hidden" id="gameId">
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <!-- Name -->
+                            <div class="md:col-span-2">
+                                <label class="block text-sm font-medium text-gray-300 mb-2">Nombre *</label>
+                                <input type="text" id="gameName" required
+                                    class="w-full bg-gray-700 border border-gray-600 text-white rounded-lg px-4 py-2 focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                                    oninput="generateSlug()">
+                            </div>
+
+                            <!-- Slug -->
+                            <div class="md:col-span-2">
+                                <label class="block text-sm font-medium text-gray-300 mb-2">Slug *</label>
+                                <input type="text" id="gameSlug" required pattern="[a-z0-9-]+"
+                                    class="w-full bg-gray-700 border border-gray-600 text-white rounded-lg px-4 py-2 focus:ring-2 focus:ring-red-500 focus:border-transparent">
+                                <p class="text-xs text-gray-400 mt-1">Solo letras minúsculas, números y guiones</p>
+                            </div>
+
+                            <!-- Type -->
+                            <div>
+                                <label class="block text-sm font-medium text-gray-300 mb-2">Tipo *</label>
+                                <select id="gameType" required
+                                    class="w-full bg-gray-700 border border-gray-600 text-white rounded-lg px-4 py-2 focus:ring-2 focus:ring-red-500 focus:border-transparent">
+                                    <option value="">Seleccionar...</option>
+                                    <option value="SLOT">Slot</option>
+                                    <option value="ROULETTE">Ruleta</option>
+                                    <option value="BLACKJACK">Blackjack</option>
+                                    <option value="POKER">Poker</option>
+                                    <option value="BACCARAT">Baccarat</option>
+                                    <option value="OTHER">Otro</option>
+                                </select>
+                            </div>
+
+                            <!-- Provider -->
+                            <div>
+                                <label class="block text-sm font-medium text-gray-300 mb-2">Proveedor</label>
+                                <input type="text" id="gameProvider"
+                                    class="w-full bg-gray-700 border border-gray-600 text-white rounded-lg px-4 py-2 focus:ring-2 focus:ring-red-500 focus:border-transparent">
+                            </div>
+
+                            <!-- Min Bet -->
+                            <div>
+                                <label class="block text-sm font-medium text-gray-300 mb-2">Apuesta Mínima *</label>
+                                <input type="number" id="gameMinBet" step="0.01" min="0" value="1.00" required
+                                    class="w-full bg-gray-700 border border-gray-600 text-white rounded-lg px-4 py-2 focus:ring-2 focus:ring-red-500 focus:border-transparent">
+                            </div>
+
+                            <!-- Max Bet -->
+                            <div>
+                                <label class="block text-sm font-medium text-gray-300 mb-2">Apuesta Máxima *</label>
+                                <input type="number" id="gameMaxBet" step="0.01" min="0" value="1000.00" required
+                                    class="w-full bg-gray-700 border border-gray-600 text-white rounded-lg px-4 py-2 focus:ring-2 focus:ring-red-500 focus:border-transparent">
+                            </div>
+
+                            <!-- RTP -->
+                            <div>
+                                <label class="block text-sm font-medium text-gray-300 mb-2">RTP (%)</label>
+                                <input type="number" id="gameRTP" step="0.01" min="0" max="100"
+                                    class="w-full bg-gray-700 border border-gray-600 text-white rounded-lg px-4 py-2 focus:ring-2 focus:ring-red-500 focus:border-transparent">
+                            </div>
+
+                            <!-- Status -->
+                            <div>
+                                <label class="block text-sm font-medium text-gray-300 mb-2">Estado *</label>
+                                <select id="gameStatus" required
+                                    class="w-full bg-gray-700 border border-gray-600 text-white rounded-lg px-4 py-2 focus:ring-2 focus:ring-red-500 focus:border-transparent">
+                                    <option value="ACTIVE">Activo</option>
+                                    <option value="INACTIVE">Inactivo</option>
+                                    <option value="MAINTENANCE">Mantenimiento</option>
+                                </select>
+                            </div>
+
+                            <!-- Is Featured -->
+                            <div class="md:col-span-2">
+                                <label class="flex items-center cursor-pointer">
+                                    <input type="checkbox" id="gameIsFeatured" class="sr-only peer">
+                                    <div class="relative w-11 h-6 bg-gray-700 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-red-800 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-red-600"></div>
+                                    <span class="ml-3 text-sm font-medium text-gray-300">Juego Destacado</span>
+                                </label>
+                            </div>
+
+                            <!-- Description -->
+                            <div class="md:col-span-2">
+                                <label class="block text-sm font-medium text-gray-300 mb-2">Descripción</label>
+                                <textarea id="gameDescription" rows="3"
+                                    class="w-full bg-gray-700 border border-gray-600 text-white rounded-lg px-4 py-2 focus:ring-2 focus:ring-red-500 focus:border-transparent"></textarea>
+                            </div>
+
+                            <!-- Thumbnail URL -->
+                            <div class="md:col-span-2">
+                                <label class="block text-sm font-medium text-gray-300 mb-2">URL de Imagen</label>
+                                <input type="url" id="gameThumbnail"
+                                    class="w-full bg-gray-700 border border-gray-600 text-white rounded-lg px-4 py-2 focus:ring-2 focus:ring-red-500 focus:border-transparent">
+                            </div>
+
+                            <!-- Rules URL -->
+                            <div class="md:col-span-2">
+                                <label class="block text-sm font-medium text-gray-300 mb-2">URL de Reglas</label>
+                                <input type="url" id="gameRules"
+                                    class="w-full bg-gray-700 border border-gray-600 text-white rounded-lg px-4 py-2 focus:ring-2 focus:ring-red-500 focus:border-transparent">
+                            </div>
+                        </div>
+
+                        <div class="flex justify-end gap-3 mt-6">
+                            <button type="button" onclick="closeModal()"
+                                class="px-5 py-2.5 bg-gray-700 hover:bg-gray-600 text-white font-medium rounded-lg transition-colors">
+                                Cancelar
+                            </button>
+                            <button type="submit"
+                                class="px-5 py-2.5 bg-red-600 hover:bg-red-700 text-white font-medium rounded-lg transition-colors">
+                                <i class="fa-solid fa-save mr-2"></i>Guardar
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <script>
+        let currentGameId = null;
+
+        // Load games on page load
+        document.addEventListener('DOMContentLoaded', () => {
+            loadGames();
+        });
+
+        // Load games from API
+        async function loadGames() {
+            const type = document.getElementById('filterType').value;
+            const status = document.getElementById('filterStatus').value;
+            const search = document.getElementById('searchInput').value;
+
+            try {
+                const params = new URLSearchParams();
+                if (type !== 'ALL') params.append('type', type);
+                if (status !== 'ALL') params.append('status', status);
+                if (search) params.append('search', search);
+
+                const response = await fetch(`/admin/games/api?${params}`);
+                const data = await response.json();
+
+                if (data.success) {
+                    renderGamesTable(data.games);
+                } else {
+                    showError('Error al cargar juegos');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                showError('Error de conexión');
+            }
+        }
+
+        // Render games table
+        function renderGamesTable(games) {
+            const tbody = document.getElementById('gamesTableBody');
+            
+            if (games.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="9" class="px-6 py-8 text-center text-gray-400">
+                            <i class="fa-solid fa-inbox text-4xl mb-2"></i>
+                            <p>No se encontraron juegos</p>
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+
+            tbody.innerHTML = games.map(game => `
+                <tr class="group hover:bg-gray-700/50 transition-colors">
+                    <td class="px-6 py-4 font-mono text-gray-500">#${game.id_game}</td>
+                    <td class="px-6 py-4">
+                        <div class="flex items-center gap-3">
+                            ${game.thumbnail_url ? 
+                                `<img src="${game.thumbnail_url}" alt="${game.name}" class="w-10 h-10 rounded object-cover">` :
+                                `<div class="w-10 h-10 rounded bg-gray-700 flex items-center justify-center">
+                                    <i class="fa-solid fa-gamepad text-gray-500"></i>
+                                </div>`
+                            }
+                            <div>
+                                <p class="font-medium text-white">${game.name}</p>
+                                <p class="text-xs text-gray-400">${game.slug}</p>
+                            </div>
+                        </div>
+                    </td>
+                    <td class="px-6 py-4">
+                        <span class="px-2.5 py-1 rounded-full text-xs font-medium ${getTypeColor(game.type)}">
+                            ${game.type}
+                        </span>
+                    </td>
+                    <td class="px-6 py-4 text-gray-400">${game.provider || '-'}</td>
+                    <td class="px-6 py-4 text-center text-sm">
+                        <div class="text-gray-300">$${parseFloat(game.min_bet).toFixed(2)} - $${parseFloat(game.max_bet).toFixed(2)}</div>
+                    </td>
+                    <td class="px-6 py-4 text-center">
+                        ${game.rtp ? `<span class="text-emerald-400 font-medium">${parseFloat(game.rtp).toFixed(2)}%</span>` : '<span class="text-gray-500">-</span>'}
+                    </td>
+                    <td class="px-6 py-4 text-center">
+                        <span class="px-2.5 py-1 rounded-full text-xs font-medium ${getStatusColor(game.status)}">
+                            ${game.status}
+                        </span>
+                    </td>
+                    <td class="px-6 py-4 text-center">
+                        ${game.is_featured ? 
+                            '<i class="fa-solid fa-star text-yellow-400"></i>' : 
+                            '<i class="fa-regular fa-star text-gray-600"></i>'
+                        }
+                    </td>
+                    <td class="px-6 py-4">
+                        <div class="flex justify-center gap-2">
+                            <button onclick="editGame(${game.id_game})"
+                                class="p-2 bg-gray-700 hover:bg-red-600 text-gray-300 hover:text-white rounded-lg transition-colors"
+                                title="Editar">
+                                <i class="fa-solid fa-pen-to-square"></i>
+                            </button>
+                            <button onclick="deleteGame(${game.id_game}, '${game.name}')"
+                                class="p-2 bg-gray-700 hover:bg-rose-600 text-gray-300 hover:text-white rounded-lg transition-colors"
+                                title="Eliminar">
+                                <i class="fa-solid fa-trash-can"></i>
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        // Get type color
+        function getTypeColor(type) {
+            const colors = {
+                'SLOT': 'bg-purple-500/10 text-purple-400 border border-purple-500/20',
+                'ROULETTE': 'bg-red-500/10 text-red-400 border border-red-500/20',
+                'BLACKJACK': 'bg-blue-500/10 text-blue-400 border border-blue-500/20',
+                'POKER': 'bg-green-500/10 text-green-400 border border-green-500/20',
+                'BACCARAT': 'bg-yellow-500/10 text-yellow-400 border border-yellow-500/20',
+                'OTHER': 'bg-gray-500/10 text-gray-400 border border-gray-500/20'
+            };
+            return colors[type] || colors['OTHER'];
+        }
+
+        // Get status color
+        function getStatusColor(status) {
+            const colors = {
+                'ACTIVE': 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20',
+                'INACTIVE': 'bg-gray-500/10 text-gray-400 border border-gray-500/20',
+                'MAINTENANCE': 'bg-orange-500/10 text-orange-400 border border-orange-500/20'
+            };
+            return colors[status] || colors['INACTIVE'];
+        }
+
+        // Open modal for new game
+        function openModal() {
+            currentGameId = null;
+            document.getElementById('modalTitle').textContent = 'Nuevo Juego';
+            document.getElementById('gameForm').reset();
+            document.getElementById('gameId').value = '';
+            document.getElementById('gameModal').classList.remove('hidden');
+        }
+
+        // Close modal
+        function closeModal() {
+            document.getElementById('gameModal').classList.add('hidden');
+        }
+
+        // Generate slug from name
+        function generateSlug() {
+            const name = document.getElementById('gameName').value;
+            const slug = name.toLowerCase()
+                .replace(/[^a-z0-9\s-]/g, '')
+                .replace(/\s+/g, '-')
+                .replace(/-+/g, '-')
+                .trim();
+            document.getElementById('gameSlug').value = slug;
+        }
+
+        // Edit game
+        async function editGame(id) {
+            try {
+                const response = await fetch(`/admin/games/api/${id}`);
+                const data = await response.json();
+
+                if (data.success) {
+                    const game = data.game;
+                    currentGameId = id;
+                    
+                    document.getElementById('modalTitle').textContent = 'Editar Juego';
+                    document.getElementById('gameId').value = game.id_game;
+                    document.getElementById('gameName').value = game.name;
+                    document.getElementById('gameSlug').value = game.slug;
+                    document.getElementById('gameType').value = game.type;
+                    document.getElementById('gameProvider').value = game.provider || '';
+                    document.getElementById('gameMinBet').value = game.min_bet;
+                    document.getElementById('gameMaxBet').value = game.max_bet;
+                    document.getElementById('gameRTP').value = game.rtp || '';
+                    document.getElementById('gameStatus').value = game.status;
+                    document.getElementById('gameIsFeatured').checked = game.is_featured == 1;
+                    document.getElementById('gameDescription').value = game.description || '';
+                    document.getElementById('gameThumbnail').value = game.thumbnail_url || '';
+                    document.getElementById('gameRules').value = game.rules_url || '';
+                    
+                    document.getElementById('gameModal').classList.remove('hidden');
+                } else {
+                    showError('Error al cargar el juego');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                showError('Error de conexión');
+            }
+        }
+
+        // Save game (create or update)
+        async function saveGame(event) {
+            event.preventDefault();
+
+            const gameData = {
+                name: document.getElementById('gameName').value,
+                slug: document.getElementById('gameSlug').value,
+                type: document.getElementById('gameType').value,
+                provider: document.getElementById('gameProvider').value,
+                min_bet: document.getElementById('gameMinBet').value,
+                max_bet: document.getElementById('gameMaxBet').value,
+                rtp: document.getElementById('gameRTP').value || null,
+                status: document.getElementById('gameStatus').value,
+                is_featured: document.getElementById('gameIsFeatured').checked,
+                description: document.getElementById('gameDescription').value,
+                thumbnail_url: document.getElementById('gameThumbnail').value,
+                rules_url: document.getElementById('gameRules').value
+            };
+
+            const id = document.getElementById('gameId').value;
+            const url = id ? `/admin/games/api/${id}` : '/admin/games/api';
+            const method = id ? 'PUT' : 'POST';
+
+            try {
+                const response = await fetch(url, {
+                    method: method,
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(gameData)
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    showSuccess(data.message);
+                    closeModal();
+                    loadGames();
+                } else {
+                    showError(data.message);
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                showError('Error al guardar el juego');
+            }
+        }
+
+        // Delete game
+        function deleteGame(id, name) {
+            Swal.fire({
+                title: '¿Estás seguro?',
+                text: `Se marcará "${name}" como INACTIVO`,
+                icon: 'warning',
+                background: '#1f2937',
+                color: '#fff',
+                showCancelButton: true,
+                confirmButtonColor: '#dc2626',
+                cancelButtonColor: '#4b5563',
+                confirmButtonText: 'Sí, eliminar',
+                cancelButtonText: 'Cancelar'
+            }).then(async (result) => {
+                if (result.isConfirmed) {
+                    try {
+                        const response = await fetch(`/admin/games/api/${id}`, {
+                            method: 'DELETE'
+                        });
+
+                        const data = await response.json();
+
+                        if (data.success) {
+                            showSuccess(data.message);
+                            loadGames();
+                        } else {
+                            showError(data.message);
+                        }
+                    } catch (error) {
+                        console.error('Error:', error);
+                        showError('Error al eliminar el juego');
+                    }
+                }
+            });
+        }
+
+        // Show success message
+        function showSuccess(message) {
+            Swal.fire({
+                icon: 'success',
+                title: 'Éxito',
+                text: message,
+                background: '#1f2937',
+                color: '#fff',
+                confirmButtonColor: '#dc2626'
+            });
+        }
+
+        // Show error message
+        function showError(message) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: message,
+                background: '#1f2937',
+                color: '#fff',
+                confirmButtonColor: '#dc2626'
+            });
+        }
+    </script>
+</body>
+
+</html>

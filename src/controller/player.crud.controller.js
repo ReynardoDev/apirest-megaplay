@@ -66,13 +66,32 @@ export const playerCreate = async (req, res) => {
             [cleanName, cleanUsername, cleanEmail, hashedPassword, cleanPhone, cleanCountry]
         );
 
+        const newPlayerId = result.insertId;
+
         // 3. Insertar Wallet
         await pool.query(
             "INSERT INTO wallet (id_player, chips) VALUES (?, ?)",
-            [result.insertId, chips_bono]
+            [newPlayerId, chips_bono]
         );
 
-        // 4. ÉXITO: Redirigir al login con mensaje de éxito
+        // 4. Registrar transacción del bono inicial
+        await pool.query(
+            `INSERT INTO transactions 
+            (player_id, transaction_type, amount, balance_before, balance_after, reference_type, reference_id, description, created_at) 
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW())`,
+            [
+                newPlayerId,
+                'BONUS',
+                chips_bono,
+                0,
+                chips_bono,
+                'REGISTRATION_BONUS',
+                null,
+                'Bono de bienvenida por registro'
+            ]
+        );
+
+        // 5. ÉXITO: Redirigir al login con mensaje de éxito
         // Si viene de /register (público), redirigir al login
         // Si viene de /crud (admin), redirigir al CRUD
         const isPublicRegistration = req.path === '/';
@@ -107,6 +126,94 @@ export const playerCreate = async (req, res) => {
             error: errorMessage,
             item: req.body,
             message: null,
+        });
+    }
+}
+
+// --- PROCESAR CREACIÓN DESDE API (POST) - Para Godot/Clientes API ---
+export const playerCreateAPI = async (req, res) => {
+    try {
+        const { name, username, password, email, phone, country } = req.body;
+
+        // 1. Validación básica
+        if (!name || !username || !password || !email) {
+            return res.status(400).json({
+                success: false,
+                message: "Todos los campos obligatorios deben ser completados (nombre, usuario, contraseña, email)"
+            });
+        }
+
+        const salt = await bcrypt.genSalt(10);
+        const hashedPassword = await bcrypt.hash(password, salt);
+        const cleanName = name.trim();
+        const cleanUsername = username.trim();
+        const cleanEmail = email.trim();
+        const cleanPhone = phone ? phone.trim() : null;
+        const cleanCountry = country ? country.trim().toUpperCase() : null;
+        let chips_bono = 1000;
+
+        // 2. Insertar Jugador
+        const [result] = await pool.query(
+            `INSERT INTO players 
+            (name, username, email, password_hash, phone, country, status, email_verified) 
+            VALUES (?, ?, ?, ?, ?, ?, 'ACTIVE', TRUE)`,
+            [cleanName, cleanUsername, cleanEmail, hashedPassword, cleanPhone, cleanCountry]
+        );
+
+        const newPlayerId = result.insertId;
+
+        // 3. Insertar Wallet
+        await pool.query(
+            "INSERT INTO wallet (id_player, chips) VALUES (?, ?)",
+            [newPlayerId, chips_bono]
+        );
+
+        // 4. Registrar transacción del bono inicial
+        await pool.query(
+            `INSERT INTO transactions 
+            (player_id, transaction_type, amount, balance_before, balance_after, reference_type, reference_id, description, created_at) 
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW())`,
+            [
+                newPlayerId,
+                'BONUS',
+                chips_bono,
+                0,
+                chips_bono,
+                'REGISTRATION_BONUS',
+                null,
+                'Bono de bienvenida por registro'
+            ]
+        );
+
+        // 5. ÉXITO: Devolver JSON
+        return res.status(201).json({
+            success: true,
+            message: `¡Cuenta creada exitosamente! Has recibido ${chips_bono} chips de bono.`,
+            data: {
+                id_player: result.insertId,
+                username: cleanUsername,
+                email: cleanEmail,
+                chips_bono: chips_bono
+            }
+        });
+
+    } catch (error) {
+        console.error("Error en playerCreateAPI:", error);
+
+        // Manejar errores específicos
+        let errorMessage = "Error al guardar: " + error.message;
+
+        if (error.code === 'ER_DUP_ENTRY') {
+            if (error.message.includes('email')) {
+                errorMessage = "Este email ya está registrado";
+            } else if (error.message.includes('username')) {
+                errorMessage = "Este nombre de usuario ya está en uso";
+            }
+        }
+
+        return res.status(400).json({
+            success: false,
+            message: errorMessage
         });
     }
 }

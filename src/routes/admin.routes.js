@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { requireAdmin } from '../middlewares/admin.middleware.js';
 import * as adminController from '../controller/admin.controller.js';
+import gamesRoutes from './admin.games.routes.js';
 
 const router = Router();
 
@@ -30,5 +31,8 @@ router.get('/statistics', adminController.getStatsView);
 // Statistics (API)
 router.get('/stats/games', adminController.getGameStats);
 router.get('/stats/system', adminController.getSystemStats);
+
+// Games Management
+router.use('/games', gamesRoutes);
 
 export default router;

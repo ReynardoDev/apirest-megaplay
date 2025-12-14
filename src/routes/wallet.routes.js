@@ -27,7 +27,7 @@ router.post("/wallet/purchase", verifyJWT, purchaseChips);  // Protegida con JWT
 // Rutas para juegos (apuestas y ganancias) - PROTEGIDAS CON JWT Y ANTI-CHEAT
 router.post("/wallet/bet",
     verifyJWT,                    // 1. Verificar autenticación
-    rateLimiter(10, 60000),       // 2. Máximo 10 apuestas por minuto
+    rateLimiter(30, 60000),       // 2. Máximo 30 apuestas por minuto (razonable para slots)
     preventConcurrentBets,        // 3. Prevenir apuestas simultáneas
     validateBetAmount,            // 4. Validar monto de apuesta
     detectSuspiciousPatterns,     // 5. Detectar patrones de trampa
@@ -36,7 +36,7 @@ router.post("/wallet/bet",
 
 router.post("/wallet/win",
     verifyJWT,                    // 1. Verificar autenticación
-    rateLimiter(10, 60000),       // 2. Máximo 10 ganancias por minuto
+    rateLimiter(30, 60000),       // 2. Máximo 30 ganancias por minuto
     processWin                    // 3. Procesar ganancia
 );
 
