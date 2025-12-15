@@ -16,6 +16,7 @@ import playerCrudRoutes from "./routes/player.crud.routes.js";
 import registerRoutes from "./routes/register.routes.js";
 import adminLoginRoutes from "./routes/admin.login.routes.js";
 import adminRoutes from "./routes/admin.routes.js";
+import cryptoRoutes from "./routes/crypto.routes.js";
 
 // Middlewares
 import { jsonSyntaxErrorHandler } from "./middlewares/errorHandler.js";
@@ -129,6 +130,7 @@ app.use('/admin', adminRoutes);
 // 👇 Permite acceso tanto a jugadores como a admins
 import { verifyPlayerOrAdmin } from './middlewares/verifyPlayerOrAdmin.middleware.js';
 app.use('/crud', verifyPlayerOrAdmin, playerCrudRoutes);
+app.use('/api', cryptoRoutes); // Rutas de crypto (depósitos, retiros, KYC)
 app.use('/api', walletRoutes); // Quizás quieras proteger la billetera también
 
 // --- MANEJADORES DE ERROR (SIEMPRE AL FINAL) ---

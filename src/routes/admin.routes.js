@@ -2,6 +2,7 @@ import { Router } from 'express';
 import { requireAdmin } from '../middlewares/admin.middleware.js';
 import * as adminController from '../controller/admin.controller.js';
 import gamesRoutes from './admin.games.routes.js';
+import rateLimitRoutes from './admin.ratelimit.routes.js';
 
 const router = Router();
 
@@ -34,5 +35,8 @@ router.get('/stats/system', adminController.getSystemStats);
 
 // Games Management
 router.use('/games', gamesRoutes);
+
+// Rate Limit Configuration
+router.use('/rate-limits', rateLimitRoutes);
 
 export default router;

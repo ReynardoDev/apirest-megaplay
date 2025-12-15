@@ -1,20 +1,62 @@
 /**
  * Middleware de Rate Limiting para prevenir spam y trampa
  * Limita el número de peticiones por usuario en un período de tiempo
+ * Configuración dinámica desde base de datos
  */
+
+import { pool } from '../db.js';
 
 // Almacenamiento en memoria de las peticiones por usuario
 // En producción, considera usar Redis para compartir entre instancias
 const userRequests = new Map();
 const activeBets = new Map(); // Rastrear apuestas activas
 
+// Cache de configuraciones de rate limit
+const rateLimitCache = new Map();
+let lastCacheUpdate = 0;
+const CACHE_TTL = 60000; // 60 segundos
+
 /**
- * Rate Limiter general
- * @param {number} maxRequests - Máximo de peticiones permitidas
- * @param {number} windowMs - Ventana de tiempo en milisegundos
+ * Obtener configuración de rate limit desde base de datos (con cache)
+ * @param {string} endpoint - Endpoint de la API
  */
-export const rateLimiter = (maxRequests = 10, windowMs = 60000) => {
-    return (req, res, next) => {
+async function getRateLimitConfig(endpoint) {
+    const now = Date.now();
+
+    // Actualizar cache si ha expirado
+    if (now - lastCacheUpdate > CACHE_TTL) {
+        try {
+            const [configs] = await pool.query(
+                'SELECT endpoint, max_requests, window_ms, is_active FROM rate_limit_config WHERE is_active = 1'
+            );
+
+            rateLimitCache.clear();
+            configs.forEach(config => {
+                rateLimitCache.set(config.endpoint, {
+                    maxRequests: config.max_requests,
+                    windowMs: config.window_ms
+                });
+            });
+
+            lastCacheUpdate = now;
+            console.log(`🔄 Rate limit cache actualizado: ${configs.length} configuraciones`);
+        } catch (error) {
+            console.error('❌ Error al cargar configuración de rate limit:', error);
+            // Usar valores por defecto en caso de error
+        }
+    }
+
+    return rateLimitCache.get(endpoint);
+}
+
+/**
+ * Rate Limiter dinámico basado en base de datos
+ * @param {string} endpoint - Endpoint de la API (ej: 'wallet/bet')
+ * @param {number} defaultMaxRequests - Máximo por defecto si no hay config en DB
+ * @param {number} defaultWindowMs - Ventana por defecto si no hay config en DB
+ */
+export const rateLimiter = (endpoint, defaultMaxRequests = 30, defaultWindowMs = 60000) => {
+    return async (req, res, next) => {
         const userId = res.locals.user?.id;
 
         if (!userId) {
@@ -22,8 +64,13 @@ export const rateLimiter = (maxRequests = 10, windowMs = 60000) => {
             return next();
         }
 
+        // Obtener configuración desde DB (con cache)
+        const config = await getRateLimitConfig(endpoint);
+        const maxRequests = config?.maxRequests || defaultMaxRequests;
+        const windowMs = config?.windowMs || defaultWindowMs;
+
         const now = Date.now();
-        const userKey = `rate_${userId}`;
+        const userKey = `rate_${userId}_${endpoint}`;
 
         // Obtener o crear registro de peticiones del usuario
         if (!userRequests.has(userKey)) {
@@ -37,7 +84,7 @@ export const rateLimiter = (maxRequests = 10, windowMs = 60000) => {
 
         // Verificar si excede el límite
         if (validRequests.length >= maxRequests) {
-            console.log(`⚠️ Rate limit excedido - User: ${userId}, Requests: ${validRequests.length}/${maxRequests}`);
+            console.log(`⚠️ Rate limit excedido - User: ${userId}, Endpoint: ${endpoint}, Requests: ${validRequests.length}/${maxRequests}`);
 
             return res.status(429).json({
                 success: false,
@@ -193,14 +240,26 @@ export const detectSuspiciousPatterns = (req, res, next) => {
     }
 
     // PATRÓN 2: Apuestas idénticas repetidas (bot)
-    // Requiere al menos 15 apuestas en 5 minutos para evitar falsos positivos
-    // Es normal que un jugador apueste el mismo monto varias veces
-    if (recentHistory.length >= 15) {
+    // Requiere al menos 20 apuestas en 5 minutos para evitar falsos positivos
+    // Es normal que un jugador apueste el mismo monto varias veces, especialmente montos redondos
+    if (recentHistory.length >= 20) {
         const amounts = recentHistory.map(b => b.amount);
         const uniqueAmounts = [...new Set(amounts)];
 
-        // Si solo hay 1, 2 o 3 montos diferentes en 15+ apuestas, verificar porcentaje
-        if (uniqueAmounts.length <= 3) {
+        // Montos comunes/redondos que son normales en slots
+        const commonAmounts = [10, 20, 50, 100, 200, 500, 1000, 5000, 10000];
+
+        // Si solo hay 1 o 2 montos diferentes en 20+ apuestas, verificar si son montos comunes
+        if (uniqueAmounts.length <= 2) {
+            // Verificar si todos los montos únicos son "comunes"
+            const allCommon = uniqueAmounts.every(amt => commonAmounts.includes(amt));
+
+            if (allCommon) {
+                // Es normal apostar siempre 100 o alternar entre 100 y 200
+                // No bloquear
+                return next();
+            }
+
             // Contar cuántas veces aparece el monto más común
             const amountCounts = {};
             amounts.forEach(amt => {
@@ -210,14 +269,19 @@ export const detectSuspiciousPatterns = (req, res, next) => {
             const maxCount = Math.max(...Object.values(amountCounts));
             const totalBets = amounts.length;
 
-            // Si más del 90% de las apuestas son del mismo monto (muy sospechoso)
-            if (maxCount / totalBets > 0.9) {
-                console.log(`🚨 Bot detectado - User: ${userId}, Apuestas idénticas: ${maxCount}/${totalBets} con monto ${Object.keys(amountCounts).find(k => amountCounts[k] === maxCount)}`);
+            // Si más del 95% de las apuestas son del mismo monto Y no es un monto común (muy sospechoso)
+            if (maxCount / totalBets > 0.95) {
+                const mostCommonAmount = parseFloat(Object.keys(amountCounts).find(k => amountCounts[k] === maxCount));
 
-                return res.status(429).json({
-                    success: false,
-                    message: "Patrón de apuestas sospechoso detectado. Por favor varía tus apuestas."
-                });
+                // Verificar si el monto más común es un valor "raro" (no redondo)
+                if (!commonAmounts.includes(mostCommonAmount)) {
+                    console.log(`🚨 Bot detectado - User: ${userId}, Apuestas idénticas: ${maxCount}/${totalBets} con monto inusual ${mostCommonAmount}`);
+
+                    return res.status(429).json({
+                        success: false,
+                        message: "Patrón de apuestas sospechoso detectado. Por favor varía tus apuestas."
+                    });
+                }
             }
         }
     }

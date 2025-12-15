@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Configuración Rate Limit - Admin Panel</title>
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        .modal-backdrop {
+            background-color: rgba(0, 0, 0, 0.75);
+        }
+    </style>
+</head>
+
+<body class="bg-gray-900 text-gray-100 font-sans antialiased">
+
+    <!-- Admin Navbar -->
+    <nav class="bg-gray-800 border-b border-red-700/30">
+        <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+            <div class="flex h-16 items-center justify-between">
+                <div class="flex items-center gap-3">
+                    <a href="/admin/dashboard" class="flex items-center gap-3">
+                        <div
+                            class="flex h-10 w-10 items-center justify-center rounded-lg bg-gradient-to-br from-red-600 to-red-800 shadow-lg">
+                            <svg class="h-6 w-6 text-white" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd"
+                                    d="M10 2a1 1 0 011 1v1.323l3.954 1.582 1.599-.8a1 1 0 01.894 1.79l-1.233.616 1.738 5.42a1 1 0 01-.285 1.05A3.989 3.989 0 0115 15a3.989 3.989 0 01-2.667-1.019 1 1 0 01-.285-1.05l1.715-5.349L11 6.477V16h2a1 1 0 110 2H7a1 1 0 110-2h2V6.477L6.237 7.582l1.715 5.349a1 1 0 01-.285 1.05A3.989 3.989 0 015 15a3.989 3.989 0 01-2.667-1.019 1 1 0 01-.285-1.05l1.738-5.42-1.233-.617a1 1 0 01.894-1.788l1.599.799L9 4.323V3a1 1 0 011-1z"
+                                    clip-rule="evenodd" />
+                            </svg>
+                        </div>
+                        <div>
+                            <h1 class="text-xl font-bold text-white">Admin Panel</h1>
+                            <p class="text-xs text-gray-400">Fair Play Casino</p>
+                        </div>
+                    </a>
+                </div>
+
+                <div class="flex items-center gap-4">
+                    <a href="/admin/dashboard"
+                        class="text-gray-400 hover:text-white transition-colors duration-200 text-sm">
+                        <i class="fa-solid fa-arrow-left mr-2"></i>Volver al Dashboard
+                    </a>
+                    <a href="/admin/logout"
+                        class="rounded-md bg-red-600/80 px-4 py-2 text-sm font-medium text-white hover:bg-red-600 transition-colors duration-200">
+                        Salir
+                    </a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="min-h-screen p-6">
+        <div class="max-w-7xl mx-auto">
+
+            <div class="flex flex-col md:flex-row justify-between items-center mb-8 gap-4">
+                <div>
+                    <h1 class="text-3xl font-extrabold text-white tracking-tight">
+                        <i class="fa-solid fa-gauge-high text-red-500 mr-2"></i>
+                        Configuración Rate Limit
+                    </h1>
+                    <p class="text-gray-400 text-sm mt-1">Gestiona los límites de peticiones por endpoint</p>
+                </div>
+            </div>
+
+            <!-- Rate Limits Table -->
+            <div class="bg-gray-800 rounded-xl shadow-2xl overflow-hidden border border-gray-700">
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left">
+                        <thead class="bg-gray-900/50">
+                            <tr>
+                                <th class="px-6 py-4 text-xs font-bold text-gray-400 uppercase tracking-wider">Endpoint
+                                </th>
+                                <th
+                                    class="px-6 py-4 text-xs font-bold text-gray-400 uppercase tracking-wider text-center">
+                                    Max Requests</th>
+                                <th
+                                    class="px-6 py-4 text-xs font-bold text-gray-400 uppercase tracking-wider text-center">
+                                    Ventana</th>
+                                <th class="px-6 py-4 text-xs font-bold text-gray-400 uppercase tracking-wider">
+                                    Descripción</th>
+                                <th
+                                    class="px-6 py-4 text-xs font-bold text-gray-400 uppercase tracking-wider text-center">
+                                    Estado</th>
+                                <th
+                                    class="px-6 py-4 text-xs font-bold text-gray-400 uppercase tracking-wider text-center">
+                                    Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="rateLimitsTableBody" class="divide-y divide-gray-700">
+                            <!-- Loaded via JavaScript -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal for Edit Rate Limit -->
+    <div id="editModal" class="hidden fixed inset-0 z-50 overflow-y-auto">
+        <div class="flex items-center justify-center min-h-screen px-4">
+            <div class="modal-backdrop fixed inset-0" onclick="closeModal()"></div>
+
+            <div class="bg-gray-800 rounded-xl shadow-2xl border border-gray-700 z-10 w-full max-w-2xl">
+                <div class="p-6">
+                    <div class="flex justify-between items-center mb-6">
+                        <h2 id="modalTitle" class="text-2xl font-bold text-white">Editar Rate Limit</h2>
+                        <button onclick="closeModal()" class="text-gray-400 hover:text-white">
+                            <i class="fa-solid fa-xmark text-2xl"></i>
+                        </button>
+                    </div>
+
+                    <form id="editForm" onsubmit="saveConfig(event)">
+                        <input type="hidden" id="configId">
+
+                        <div class="grid grid-cols-1 gap-4">
+                            <!-- Endpoint (read-only) -->
+                            <div>
+                                <label class="block text-sm font-medium text-gray-300 mb-2">Endpoint</label>
+                                <input type="text" id="configEndpoint" readonly
+                                    class="w-full bg-gray-700 border border-gray-600 text-gray-400 rounded-lg px-4 py-2 cursor-not-allowed">
+                            </div>
+
+                            <!-- Max Requests -->
+                            <div>
+                                <label class="block text-sm font-medium text-gray-300 mb-2">Máximo de Peticiones
+                                    *</label>
+                                <input type="number" id="configMaxRequests" required min="1"
+                                    class="w-full bg-gray-700 border border-gray-600 text-white rounded-lg px-4 py-2 focus:ring-2 focus:ring-red-500 focus:border-transparent">
+                                <p class="text-xs text-gray-400 mt-1">Número máximo de peticiones permitidas</p>
+                            </div>
+
+                            <!-- Window (dropdown) -->
+                            <div>
+                                <label class="block text-sm font-medium text-gray-300 mb-2">Ventana de Tiempo *</label>
+                                <select id="configWindow" required onchange="updateWindowDisplay()"
+                                    class="w-full bg-gray-700 border border-gray-600 text-white rounded-lg px-4 py-2 focus:ring-2 focus:ring-red-500 focus:border-transparent">
+                                    <option value="60000">1 minuto (60,000 ms)</option>
+                                    <option value="300000">5 minutos (300,000 ms)</option>
+                                    <option value="900000">15 minutos (900,000 ms)</option>
+                                    <option value="3600000">1 hora (3,600,000 ms)</option>
+                                    <option value="custom">Personalizado</option>
+                                </select>
+                            </div>
+
+                            <!-- Custom Window (hidden by default) -->
+                            <div id="customWindowDiv" class="hidden">
+                                <label class="block text-sm font-medium text-gray-300 mb-2">Ventana Personalizada (ms)
+                                    *</label>
+                                <input type="number" id="configWindowCustom" min="1000"
+                                    class="w-full bg-gray-700 border border-gray-600 text-white rounded-lg px-4 py-2 focus:ring-2 focus:ring-red-500 focus:border-transparent">
+                                <p class="text-xs text-gray-400 mt-1">Tiempo en milisegundos (1000 ms = 1 segundo)</p>
+                            </div>
+
+                            <!-- Description -->
+                            <div>
+                                <label class="block text-sm font-medium text-gray-300 mb-2">Descripción</label>
+                                <textarea id="configDescription" rows="2"
+                                    class="w-full bg-gray-700 border border-gray-600 text-white rounded-lg px-4 py-2 focus:ring-2 focus:ring-red-500 focus:border-transparent"></textarea>
+                            </div>
+                        </div>
+
+                        <div class="flex justify-end gap-3 mt-6">
+                            <button type="button" onclick="closeModal()"
+                                class="px-5 py-2.5 bg-gray-700 hover:bg-gray-600 text-white font-medium rounded-lg transition-colors">
+                                Cancelar
+                            </button>
+                            <button type="submit"
+                                class="px-5 py-2.5 bg-red-600 hover:bg-red-700 text-white font-medium rounded-lg transition-colors">
+                                <i class="fa-solid fa-save mr-2"></i>Guardar
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <script>
+        // Load configs on page load
+        document.addEventListener('DOMContentLoaded', () => {
+            loadConfigs();
+        });
+
+        // Load rate limit configurations
+        async function loadConfigs() {
+            try {
+                const response = await fetch('/admin/rate-limits/api');
+                const data = await response.json();
+
+                if (data.success) {
+                    renderConfigsTable(data.configs);
+                } else {
+                    showError('Error al cargar configuraciones');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                showError('Error de conexión');
+            }
+        }
+
+        // Render configs table
+        function renderConfigsTable(configs) {
+            const tbody = document.getElementById('rateLimitsTableBody');
+
+            if (configs.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="6" class="px-6 py-8 text-center text-gray-400">
+                            <i class="fa-solid fa-inbox text-4xl mb-2"></i>
+                            <p>No hay configuraciones</p>
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+
+            tbody.innerHTML = configs.map(config => `
+                <tr class="group hover:bg-gray-700/50 transition-colors">
+                    <td class="px-6 py-4">
+                        <span class="font-mono text-sm text-blue-400">${config.endpoint}</span>
+                    </td>
+                    <td class="px-6 py-4 text-center">
+                        <span class="text-white font-semibold">${config.max_requests}</span>
+                    </td>
+                    <td class="px-6 py-4 text-center text-sm text-gray-300">
+                        ${formatWindow(config.window_ms)}
+                    </td>
+                    <td class="px-6 py-4 text-gray-400 text-sm">
+                        ${config.description || '-'}
+                    </td>
+                    <td class="px-6 py-4 text-center">
+                        <button onclick="toggleConfig(${config.id}, ${config.is_active})" 
+                            class="px-3 py-1 rounded-full text-xs font-medium ${config.is_active ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 'bg-gray-500/10 text-gray-400 border border-gray-500/20'}">
+                            ${config.is_active ? '✓ Activo' : '✗ Inactivo'}
+                        </button>
+                    </td>
+                    <td class="px-6 py-4">
+                        <div class="flex justify-center gap-2">
+                            <button onclick="editConfig(${config.id})"
+                                class="p-2 bg-gray-700 hover:bg-red-600 text-gray-300 hover:text-white rounded-lg transition-colors"
+                                title="Editar">
+                                <i class="fa-solid fa-pen-to-square"></i>
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        // Format window time
+        function formatWindow(ms) {
+            if (ms < 60000) return `${ms / 1000}s`;
+            if (ms < 3600000) return `${ms / 60000}m`;
+            return `${ms / 3600000}h`;
+        }
+
+        // Edit configuration
+        async function editConfig(id) {
+            try {
+                const response = await fetch(`/admin/rate-limits/api/${id}`);
+                const data = await response.json();
+
+                if (data.success) {
+                    const config = data.config;
+
+                    document.getElementById('configId').value = config.id;
+                    document.getElementById('configEndpoint').value = config.endpoint;
+                    document.getElementById('configMaxRequests').value = config.max_requests;
+                    document.getElementById('configDescription').value = config.description || '';
+
+                    // Set window dropdown
+                    const windowSelect = document.getElementById('configWindow');
+                    const standardValues = ['60000', '300000', '900000', '3600000'];
+
+                    if (standardValues.includes(config.window_ms.toString())) {
+                        windowSelect.value = config.window_ms;
+                        document.getElementById('customWindowDiv').classList.add('hidden');
+                    } else {
+                        windowSelect.value = 'custom';
+                        document.getElementById('configWindowCustom').value = config.window_ms;
+                        document.getElementById('customWindowDiv').classList.remove('hidden');
+                    }
+
+                    document.getElementById('editModal').classList.remove('hidden');
+                } else {
+                    showError('Error al cargar la configuración');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                showError('Error de conexión');
+            }
+        }
+
+        // Update window display
+        function updateWindowDisplay() {
+            const select = document.getElementById('configWindow');
+            const customDiv = document.getElementById('customWindowDiv');
+
+            if (select.value === 'custom') {
+                customDiv.classList.remove('hidden');
+            } else {
+                customDiv.classList.add('hidden');
+            }
+        }
+
+        // Save configuration
+        async function saveConfig(event) {
+            event.preventDefault();
+
+            const id = document.getElementById('configId').value;
+            const maxRequests = document.getElementById('configMaxRequests').value;
+            const windowSelect = document.getElementById('configWindow').value;
+            const windowMs = windowSelect === 'custom'
+                ? document.getElementById('configWindowCustom').value
+                : windowSelect;
+            const description = document.getElementById('configDescription').value;
+
+            const configData = {
+                max_requests: maxRequests,
+                window_ms: windowMs,
+                description: description
+            };
+
+            try {
+                const response = await fetch(`/admin/rate-limits/api/${id}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(configData)
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    showSuccess(data.message);
+                    closeModal();
+                    loadConfigs();
+                } else {
+                    showError(data.message);
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                showError('Error al guardar la configuración');
+            }
+        }
+
+        // Toggle configuration active status
+        async function toggleConfig(id, currentStatus) {
+            try {
+                const response = await fetch(`/admin/rate-limits/api/${id}/toggle`, {
+                    method: 'PATCH'
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    showSuccess(data.message);
+                    loadConfigs();
+                } else {
+                    showError(data.message);
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                showError('Error al cambiar el estado');
+            }
+        }
+
+        // Close modal
+        function closeModal() {
+            document.getElementById('editModal').classList.add('hidden');
+        }
+
+        // Show success message
+        function showSuccess(message) {
+            Swal.fire({
+                icon: 'success',
+                title: 'Éxito',
+                text: message,
+                background: '#1f2937',
+                color: '#fff',
+                confirmButtonColor: '#dc2626'
+            });
+        }
+
+        // Show error message
+        function showError(message) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: message,
+                background: '#1f2937',
+                color: '#fff',
+                confirmButtonColor: '#dc2626'
+            });
+        }
+    </script>
+</body>
+
+</html>
